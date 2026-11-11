@@ -1,0 +1,34 @@
+<includeonly><div class="mw-rehead" hidden>{{#invoke:Rehead|main|title={{{title|}}}|meta={{{meta|}}}|style={{{style|}}}|svg={{{svg|}}}|icon={{{icon|}}}|link={{{link|}}}}}</div></includeonly><noinclude>
+{{Documentation}}
+
+本模板用于定义页面 <code>&lt;head&gt;</code> 内容。配合 <code>MediaWiki:Common.js</code> 中的
+<code>rehead</code> 功能（由 <code>{{libs|rehead=true}}</code> 启用）使用，
+不会在页面上产生任何可见内容。内容经 [[Module:Rehead]]（Lua）校验后以 JSON 形式输出，
+由脚本解析并生成真实的 head 元素。
+
+== 用法 ==
+
+<pre>
+{{rehead
+|title=页面标题
+|meta=charset:UTF-8
+name:viewport, content:width=device-width, initial-scale=1.0
+|style=body{font-family:sans-serif}
+|icon=/wiki/特殊:文件路径
+|svg=<svg xmlns="…">…</svg>
+}}
+</pre>
+
+; title: 页面标题
+; meta: meta 标签属性，多条用换行分隔（注意保留参数内的换行），每行生成一个 &lt;meta …&gt;
+; style: 内联 CSS 文本
+; icon: 图标地址，仅支持站内路径（以 / 开头）或内联 SVG（data:image/svg+xml）。
+    支持浅色/深色双 favicon：用换行分隔多行，每行 <code>[light:|dark:]值</code>，
+    如 <code>|icon=light:data:image/svg+xml,...&lt;br&gt;dark:data:image/svg+xml,...</code>
+; svg: 内联 SVG（可选，用于图标等）
+
+== 限制 ==
+
+不允许外部资源：脚本一律不写入；CSS 只能内联在 <code>style</code> 参数中；
+图标只能使用站内文件或内联 SVG。
+</noinclude>

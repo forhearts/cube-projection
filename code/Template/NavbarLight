@@ -1,0 +1,18 @@
+<includeonly>{{Navbar
+|brand={{{brand|方之投影}}}
+|brandlink={{{brandlink|首页}}}
+|links={{{links|}}}
+|search={{{search|true}}}
+|extra={{{extra|}}}
+|account={{{account|true}}}
+|theme={{{theme|light}}}
+}}</includeonly><noinclude>
+{{Documentation}}
+
+; 用途
+: 兼容别名：转发到统一的 {{Navbar}}（daisyUI 实现）。
+: 新页面请直接使用 {{Navbar}}，本模板仅用于兼容旧引用。
+
+; 参数
+: 与 {{Navbar}} 完全一致（brand、brandlink、links、search、extra、account、theme）。
+</noinclude>

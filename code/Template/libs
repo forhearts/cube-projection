@@ -1,0 +1,41 @@
+<includeonly><span
+class="mw-use-resource"
+data-cleanup="{{{cleanup|false}}}"
+data-clean="{{{clean|}}}"
+data-rehead="{{{rehead|false}}}">{{#invoke:Libs|build|js={{{js|}}}|css={{{css|}}}|daisyui={{{daisyui|}}}|daisyui-theme={{{daisyui-theme|}}}}}</span></includeonly><noinclude>
+{{Documentation}}
+
+本模板用于按需加载第三方 JS/CSS 资源，并可选启用页面清理与 head 重写，
+不会在页面上产生任何可见内容。
+
+== 用法 ==
+
+<pre>
+{{libs
+|js=tailwind
+|css=daisyui
+|daisyui=button,card,hero
+|daisyui-theme=light
+|cleanup=true
+|clean=.mw-category-generated,#some-id
+|rehead=true
+}}
+</pre>
+
+; js: 需要加载的 JS 库名，多个用英文逗号分隔（可选）
+; css: 需要加载的 CSS 库名，多个用英文逗号分隔（可选）
+; daisyui: daisyUI 按需组件清单，逗号分隔（可选）。仅当 <code>css</code> 含 <code>daisyui</code> 时生效；
+   由 [[Module:Libs]] 在服务端生成 jsdelivr combine URL，只拉取 base + 所列组件 + 主题，
+   纯 CSS 零依赖，体积远小于整包。
+; daisyui-theme: daisyUI 主题名（可选，默认 light）。如 dark、dracula、emerald 等，
+   见 https://daisyui.com/docs/themes/
+; cleanup: 是否清空页面除用户内容外的所有界面元素，true 启用（可选，默认 false）
+; clean: 自定义保留元素，逗号分隔的 CSS 选择器（可选）。仅当 <code>cleanup=true</code> 时生效。
+: 默认只保留用户内容（.mw-parser-output）；声明后，匹配的元素（连同其祖先链）
+: 会从清理中保留下来，其余全部清除。例如：<code>clean=.mw-category-generated</code>
+: 可保留分类页的分类列表。
+; rehead: 是否使用 {{rehead}} 重写 &lt;head&gt;，true 启用（可选，默认 false）
+
+所有 JS/CSS 路径均由 [[Module:Libs]] 生成并输出为 JSON（文本节点），
+由 Common.js 解析后注入，库名在该模块注册表中登记。
+</noinclude>

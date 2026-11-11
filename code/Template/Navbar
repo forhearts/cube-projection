@@ -1,0 +1,50 @@
+<includeonly>{{libs
+|js=navaccount
+|css=daisyui
+|daisyui=navbar,menu,button,dropdown
+|daisyui-theme={{{theme|light}}}
+}}
+{{#invoke:Navbar|main
+|brand={{{brand|方之投影}}}
+|brandlink={{{brandlink|首页}}}
+|links={{{links|}}}
+|search={{{search|true}}}
+|extra={{{extra|}}}
+|account={{{account|true}}}
+|theme={{{theme|light}}}
+}}</includeonly><noinclude>
+{{Documentation}}
+
+; 用途
+: 全站可复用导航栏（daisyUI 实现）。品牌、中间链接、搜索按钮、更多下拉、账户项全部参数化。
+: 明暗由 daisyUI 主题统一控制（<code>theme</code> 参数），无需区分 light/dark 版本。
+: 由 [[Module:Navbar]]（Lua）渲染，改调用处即可，不动模板。
+
+; 用法
+: <pre>{{Navbar}}</pre>
+: 带参数：
+: <pre>{{Navbar
+|brand=方之投影
+|brandlink=首页
+|links=观测档案库,/wiki/观测档案库;分类:Works,/wiki/分类:Works
+|search=true
+|extra=文档,/wiki/Docs:guide/page-authoring;关于,/wiki/关于
+|account=true
+|theme=light
+}}</pre>
+
+; 参数
+: <code>brand</code> — 品牌文本（默认「方之投影」）
+: <code>brandlink</code> — 品牌链接目标（默认「首页」）
+: <code>links</code> — 中间导航链接，格式「文本,目标;文本,目标」（可选，桌面端显示）
+: <code>search</code> — 是否显示搜索按钮（true/false，默认 true）
+: <code>extra</code> — 更多下拉额外项，格式同 links（可选）
+: <code>account</code> — 是否显示账户项（true/false，默认 true）
+: <code>theme</code> — daisyUI 主题（默认 light；dark、dracula、emerald 等）
+
+; 说明
+: 链接格式用「文本,目标」而非「文本|目标」，避免模板参数中 | 的转义问题。
+: 目标支持 /wiki/页面名、页面名、http(s):// 外链。
+: 账户项动态（由 MediaWiki:NavAccount.js 处理）：已登录→当前用户页，未登录→创建账户。
+: 以后如需 Bootstrap 版本，可新建 <code>Template:Navbar-bootstrap</code> 等，互不影响。
+</noinclude>

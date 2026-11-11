@@ -1,0 +1,19 @@
+-- Module:NavAccount — 导航栏账户项
+--
+-- 由 {{NavbarLight}} 调用：{{#invoke:NavAccount|link}}
+-- 用 mw.user.getName() 判断登录状态（比 {{USERNAME}} 可靠，Miraheze 禁用了该解析器变量）：
+--   已登录 → 链接到当前用户页（User:用户名）
+--   未登录 → 链接到创建账户（Special:CreateAccount）
+-- 返回 wikitext 内链，由模板直接输出。
+
+local p = {}
+
+function p.link()
+	local name = mw.user.getName()
+	if name and name ~= '' then
+		return '[[' .. 'User:' .. name .. '|账户]]'
+	end
+	return '[[Special:CreateAccount|创建账户]]'
+end
+
+return p

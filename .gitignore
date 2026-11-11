@@ -1,0 +1,17 @@
+# 凭据（禁止入库）
+bot/
+
+# 本地专用：线上页面快照（含登录用户信息与 csrfToken）、调试文件、已废弃资源
+_local/
+
+# 上传暂存
+code/_up/
+
+# 系统 / 编辑器
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~

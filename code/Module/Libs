@@ -1,0 +1,286 @@
+-- Module:Libs — 服务端生成全部第三方资源加载 URL（JSON）
+--
+-- 所有 JS/CSS 路径由本模块生成，浏览器端（Common.js）只负责注入。
+-- 所有第三方库一律直接引用 CDN（jsdelivr），本站不托管任何 JS/CSS 文件。
+--
+-- 用法（由 {{libs}} 调用）：
+--   {{#invoke:Libs|build|js=tailwind,bootstrap|css=daisyui|daisyui=button,card,hero|daisyui-theme=dark}}
+-- 返回 JSON：{ "js": [url...], "css": [url...] }
+-- daisyUI 按需组件由本模块拼接 jsdelivr combine URL。
+local p = {}
+
+local DAISYUI_VERSION = '5.7.14'
+local DAISYUI_CDN = 'https://cdn.jsdelivr.net'
+
+-- 资源注册表：js / css → URL
+--   url:     直接使用的 CDN 地址
+--   page:    站内页面（可选；存在时用 action=raw + cachebust 生成 URL）
+--   depends: 依赖（可选），css 内依赖用 { css = { 'dep' } } 表达
+-- 同一库同时有 url 与 page 时优先用 CDN url。
+local LIBRARIES = {
+	js = {
+		tailwind = {
+			url = 'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4',
+			depends = {}
+		},
+		vue = {
+			url = 'https://unpkg.com/vue@3/dist/vue.global.js',
+			depends = {}
+		},
+		bootstrap = {
+			url = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js',
+			depends = {}
+		},
+		stimulus = {
+			-- 注意：Miraheze CSP 白名单只有 cdn.jsdelivr.net，unpkg.com 会被拦截
+			url = 'https://cdn.jsdelivr.net/npm/@hotwired/stimulus@3.2.2/dist/stimulus.js',
+			type = 'module',
+			depends = {}
+		},
+		fluid = {
+			-- 站内页面：首页流体效果（MediaWiki:Fluid.js，action=raw 输出）
+			page = 'MediaWiki:Fluid.js',
+			version = '1',
+			depends = {}
+		},
+		archive = {
+			-- 站内页面：观测档案库（MediaWiki:Archive.js，action=raw 输出）
+			page = 'MediaWiki:Archive.js',
+			version = '2',
+			depends = {}
+		},
+		console = {
+			-- 站内页面：控制台（MediaWiki:Console.js，action=raw 输出）
+			page = 'MediaWiki:Console.js',
+			version = '2',
+			depends = {}
+		},
+		search = {
+			-- 站内页面：搜索（MediaWiki:Search.js，action=raw 输出）
+			page = 'MediaWiki:Search.js',
+			version = '1',
+			depends = {}
+		},
+		ink = {
+			-- Ink 运行时：inkjs 2.3.0（官方，UMD，挂到 window.inkjs）
+			url = 'https://cdn.jsdelivr.net/npm/inkjs@2.3.0/dist/ink.js',
+			depends = {}
+		},
+		inkplayer = {
+			-- 站内页面：Ink 游戏 Player（MediaWiki:Ink.js，action=raw 输出）
+			page = 'MediaWiki:Ink.js',
+			version = '2',
+			depends = { js = { 'ink' } }
+		},
+		navaccount = {
+			-- 站内页面：导航栏账户项（MediaWiki:NavAccount.js，action=raw 输出）
+			page = 'MediaWiki:NavAccount.js',
+			version = '1',
+			depends = {}
+		}
+	},
+	css = {
+		bulma = {
+			url = 'https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css',
+			depends = {}
+		},
+		daisyui = {
+			url = 'https://cdn.jsdelivr.net/npm/daisyui@5.7.14/daisyui.css',
+			depends = {}
+		},
+		animate = {
+			url = 'https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css',
+			depends = {}
+		},
+		milligram = {
+			url = 'https://cdn.jsdelivr.net/npm/milligram@1.4.1/dist/milligram.min.css',
+			depends = {}
+		},
+		bootstrap = {
+			url = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
+			depends = {}
+		}
+	}
+}
+
+local function trim(s)
+	return (mw.text.trim(s or ''))
+end
+
+-- 防止 MediaWiki 把裸 URL autolink 成 <a> 标签破坏 JSON 文本。
+-- 在 "://" 中间插入零宽空格 U+200B，MediaWiki 不会识别为 URL；
+-- Common.js 端读取后用 /\u200b/g 移除还原真实 URL。
+local function protectUrl(url)
+	if url == '' then
+		return url
+	end
+	return url:gsub('://', ':&#8203;//')
+end
+
+local function validName(s)
+	return s ~= '' and not mw.ustring.match(s, '[^a-z0-9%-]')
+end
+
+-- 站内资源 URL（index.php action=raw + cachebust）
+-- 用 localUrl 返回相对路径，浏览器自动补全协议与域名。
+local function siteUrl(page, version, ctype)
+	local title = mw.title.new(page)
+	if not title then
+		return ''
+	end
+	local params = { action = 'raw', ctype = ctype }
+	if version ~= '' then
+		params.cachebust = version
+	end
+	return title:localUrl(params)
+end
+
+-- daisyUI 按需组合 CSS URL；未声明组件返回空
+local function daisyuiUrl(args)
+	local comps = {}
+	for c in mw.text.gsplit(args['daisyui'] or '', ',') do
+		c = trim(c)
+		if validName(c) then
+			comps[#comps + 1] = c
+		end
+	end
+	if #comps == 0 then
+		return ''
+	end
+
+	local theme = trim(args['daisyui-theme'])
+	if theme == '' then
+		theme = 'light'
+	end
+	if not validName(theme) then
+		theme = nil
+	end
+
+	local base = {
+		'base/rootcolor.css',
+		'base/scrollbar.css',
+		'base/rootscrollgutter.css',
+		'base/properties.css',
+		'base/reset.css',
+		'base/rootscrolllock.css',
+		'base/svg.css'
+	}
+	local parts = {}
+	for _, b in ipairs(base) do
+		parts[#parts + 1] = b
+	end
+	for _, c in ipairs(comps) do
+		parts[#parts + 1] = 'components/' .. c .. '.css'
+	end
+	if theme then
+		parts[#parts + 1] = 'theme/' .. theme .. '.css'
+	end
+
+	local files = {}
+	for _, part in ipairs(parts) do
+		files[#files + 1] = 'npm/daisyui@' .. DAISYUI_VERSION .. '/' .. part
+	end
+	return DAISYUI_CDN .. '/combine/' .. table.concat(files, ',')
+end
+
+
+
+-- 解析某资源的最终 URL；无则返回空
+local function resolveUrl(type, name, ctype)
+	local table = LIBRARIES[type]
+	local mod = table and table[name]
+	if not mod then
+		return ''
+	end
+	if mod.url then
+		return mod.url
+	end
+	if mod.page then
+		return siteUrl(mod.page, mod.version or '', ctype)
+	end
+	return ''
+end
+
+-- 递归收集某资源（含依赖），写入 out。seen 用于去重。
+-- type 为 'module' 的 JS 资源写入 mods（浏览器端用动态 import() 加载），
+-- 其余写入 out。
+local function collectLib(type, name, out, seen, mods)
+	if seen[type .. ':' .. name] then
+		return
+	end
+	seen[type .. ':' .. name] = true
+
+	local table = LIBRARIES[type]
+	local mod = table and table[name]
+	if not mod then
+		return
+	end
+
+	-- 先收集同类型依赖
+	if mod.depends then
+		for depType, deps in pairs(mod.depends) do
+			for _, dep in ipairs(deps) do
+				collectLib(depType, dep, out, seen, mods)
+			end
+		end
+	end
+
+	local url = resolveUrl(type, name, type == 'js' and 'text/javascript' or 'text/css')
+	if url ~= '' then
+		if type == 'js' and mod.type == 'module' then
+			mods[#mods + 1] = protectUrl(url)
+		else
+			out[#out + 1] = protectUrl(url)
+		end
+	end
+end
+
+-- daisyUI Play CDN 方式硬依赖 tailwindcss 浏览器运行时（@tailwindcss/browser）。
+-- 声明了 daisyUI 即自动注入 tailwind JS，调用方无需再显式传 js=tailwind。
+-- 注意：collectLib 定义在前，此处才能正确调用。
+local function injectTailwind(js, seen, mods)
+	if not seen['js:tailwind'] then
+		seen['js:tailwind'] = true
+		collectLib('js', 'tailwind', js, seen, mods)
+	end
+end
+
+-- 主入口：生成 js/css URL 列表 JSON
+function p.build(frame)
+	local args = frame.args or {}
+	local js = {}
+	local css = {}
+	local mods = {}
+	local seen = {}
+
+	for name in mw.text.gsplit(args['js'] or '', ',') do
+		name = trim(name)
+		if name ~= '' then
+			collectLib('js', name, js, seen, mods)
+		end
+	end
+
+	for name in mw.text.gsplit(args['css'] or '', ',') do
+		name = trim(name)
+		if name ~= '' then
+			if name == 'daisyui' then
+				-- daisyUI 依赖 tailwind 运行时，自动注入，无需调用方单独声明
+				injectTailwind(js, seen, mods)
+				local url = daisyuiUrl(args)
+				if url == '' then
+					url = resolveUrl('css', 'daisyui', 'text/css')
+				end
+				if url ~= '' then
+					css[#css + 1] = protectUrl(url)
+				end
+			else
+				collectLib('css', name, css, seen, mods)
+			end
+		end
+	end
+
+	local data = { js = js, css = css, mods = mods }
+	return mw.text.jsonEncode(data)
+end
+
+return p

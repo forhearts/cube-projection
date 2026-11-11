@@ -1,0 +1,208 @@
+-- Module:Rehead — 校验并输出 head 内容（HTML）
+-- 由 {{rehead}} 调用，返回 HTML 字符串存入 .mw-rehead 文本节点。
+-- Common.js 用 DOMParser 解析后插入 <head>（解析不执行脚本，且会二次过滤危险标签）。
+--
+-- 白名单内建于参数名：title / meta / style / svg / icon / link。
+-- icon 仅允许站内路径（以 / 开头）或内联 SVG（data:image/svg+xml）。
+-- link 仅允许白名单 rel（如 ink-game），href 仅允许安全 URL。
+-- 支持多行，每行格式 [scheme:]value；scheme 为 light / dark / 空（默认）。
+--
+-- 安全设计（第一道防线；Common.js 消费端还会再消毒一次）：
+--   - meta 属性名白名单，杜绝 onclick/onload 等事件属性
+--   - style 过滤 javascript: URL、expression()、@import
+--   - svg 拒绝事件属性 / javascript: / script / 外部引用
+--   - 所有属性值 HTML 转义
+
+local p = {}
+
+-- HTML 转义（属性值与文本内容）
+local function esc(s)
+	return mw.text.encode(s, '<>&"\'')
+end
+
+-- meta 属性名白名单
+local META_ALLOWED = {
+	charset = true, name = true, content = true,
+	['http-equiv'] = true, property = true, itemprop = true
+}
+
+-- 把 "name:value, key2:value2" 解析为 { name = "value", key2 = "value2" }
+-- 只保留白名单内的属性名
+local function parseMetaLine(line)
+	local attrs = {}
+	for token in mw.text.gsplit(line, ',') do
+		token = mw.text.trim(token)
+		if token ~= '' then
+			local key, value = token:match('^([^:]+):(.*)$')
+			if key then
+				key = mw.text.trim(key)
+				if META_ALLOWED[key] then
+					attrs[#attrs + 1] = esc(key) .. '="' .. esc(mw.text.trim(value)) .. '"'
+				end
+			end
+		end
+	end
+	return attrs
+end
+
+-- 允许通过 rehead 声明的 link rel 白名单。
+-- 每个 rel 对应的 href 规则也一并限制（站内路径或安全协议）。
+local LINK_ALLOWED = {
+	['ink-game'] = true,
+}
+
+-- link href 是否白名单允许：
+--  - / 开头的站内路径
+--  - 完整 https:// 安全 URL（外部托管的游戏 JSON，如 jsdelivr）
+-- 一律拒绝 javascript: / data: / vbscript: 等危险协议
+local function linkHrefAllowed(value)
+	if value == '' then
+		return false
+	end
+	-- 站内路径 / 协议相对 URL
+	if string.sub(value, 1, 1) == '/' then
+		return true
+	end
+	-- 仅允许 https 外链（Ink 游戏 JSON 可能托管在 CDN）
+	if string.match(value, '^https://') then
+		return true
+	end
+	return false
+end
+
+-- 解析 link 多行参数为 { rel = 'ink-game', href = value } 数组
+-- 每行格式：rel:href（冒号分隔），如  ink-game:https://example.com/story.json
+local function parseLinks(raw)
+	local links = {}
+	for line in mw.text.gsplit(raw or '', '\n') do
+		line = mw.text.trim(line)
+		if line ~= '' then
+			local rel, href = line:match('^([^:]+):(.*)$')
+			if rel and href ~= '' then
+				rel = mw.text.trim(rel)
+				href = mw.text.trim(href)
+				if LINK_ALLOWED[rel] and linkHrefAllowed(href) then
+					links[#links + 1] = { rel = rel, href = href }
+				end
+			end
+		end
+	end
+	return links
+end
+
+-- icon 值是否白名单允许：
+--  - / 开头的站内路径
+--  - // 开头的协议相对 URL（{{filepath:}} 生成的站内文件 URL）
+--  - https:// 站内 CDN URL（{{filepath:}} 可能输出完整 https）
+--  - data:image/svg+xml 内联 SVG（保留兼容，但推荐用上传文件）
+-- 一律拒绝 javascript: / vbscript: / data:image/*(非 svg) 等危险协议
+local function iconAllowed(value)
+	if value == '' then
+		return false
+	end
+	-- 站内路径 / 协议相对 URL
+	if string.sub(value, 1, 1) == '/' then
+		return true
+	end
+	-- 安全协议：https / data:image/svg+xml（均不会执行脚本）
+	if string.match(value, '^https://') or
+		string.match(value, '^data:image/svg%+xml') then
+		return true
+	end
+	return false
+end
+
+-- 解析 icon 多行参数为 { scheme = 'light'|'dark'|'', href = value } 数组
+local function parseIcons(raw)
+	local icons = {}
+	for line in mw.text.gsplit(raw or '', '\n') do
+		line = mw.text.trim(line)
+		if line ~= '' then
+			local scheme = ''
+			local value = line
+			-- 识别 light:/dark: 前缀（仅当冒号后是白名单值才剥离）
+			local s, rest = line:match('^(%a+):(.*)$')
+			if s and (s == 'light' or s == 'dark') and rest ~= '' and iconAllowed(rest) then
+				scheme = s
+				value = rest
+			end
+			if iconAllowed(value) then
+				icons[#icons + 1] = { scheme = scheme, href = value }
+			end
+		end
+	end
+	return icons
+end
+
+-- 内容级安全校验：SVG / style 是否含危险内容
+local function unsafe(s)
+	return s:match('<[^>]*%s+on%w+%s*=') or
+		s:lower():match('javascript:') or
+		s:lower():match('vbscript:') or
+		s:lower():match('<script') or
+		s:lower():match('expression%(') or
+		s:lower():match('@import') or
+		s:lower():match('foreignobject') or
+		s:lower():match('<iframe')
+end
+
+function p.main(frame)
+	local args = frame.args or {}
+
+	local title = args['title'] or ''
+	local style = args['style'] or ''
+	local svg = args['svg'] or ''
+
+	local out = {}
+
+	-- title
+	if title ~= '' then
+		out[#out + 1] = '<title>' .. esc(title) .. '</title>'
+	end
+
+	-- meta（多条用换行分隔）
+	for line in mw.text.gsplit(args['meta'] or '', '\n') do
+		line = mw.text.trim(line)
+		if line ~= '' then
+			local attrs = parseMetaLine(line)
+			if #attrs > 0 then
+				out[#out + 1] = '<meta ' .. table.concat(attrs, ' ') .. ' />'
+			end
+		end
+	end
+
+	-- style（过滤注入向量；防 </style> 提前闭合）
+	if style ~= '' then
+		local cleanStyle = style
+			:gsub('url%s*%(%s*[\'"]?%s*(?:javascript|data):', 'url(')
+			:gsub('expression%s*%(', 'x(')
+			:gsub('@import', '/*x*/')
+			:gsub('</style', '<\\/style')
+		out[#out + 1] = '<style>' .. cleanStyle .. '</style>'
+	end
+
+	-- icon（支持 light:/dark: 双 favicon）
+	for _, icon in ipairs(parseIcons(args['icon'] or '')) do
+		local media = ''
+		if icon.scheme == 'light' then
+			media = ' media="(prefers-color-scheme: light)"'
+		elseif icon.scheme == 'dark' then
+			media = ' media="(prefers-color-scheme: dark)"'
+		end
+		out[#out + 1] = '<link rel="icon" href="' .. esc(icon.href) .. '"' .. media .. ' />'
+	end
+
+	-- link（白名单 rel，如 ink-game；Common.js 注入时不会再执行脚本）
+	for _, l in ipairs(parseLinks(args['link'] or '')) do
+		out[#out + 1] = '<link rel="' .. esc(l.rel) .. '" href="' .. esc(l.href) .. '" />'
+	end
+
+	-- svg（已校验；Common.js 插入前还会移除内部 script/iframe 等）
+	if svg ~= '' and not unsafe(svg) then
+		out[#out + 1] = svg
+	end
+
+	return table.concat(out, '\n')
+end
+
+return p

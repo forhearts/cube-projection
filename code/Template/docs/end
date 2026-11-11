@@ -1,0 +1,20 @@
+<includeonly></div>
+</div>
+</div>
+<div class="docs-footer">
+[[首页]] · [[Docs:guide/page-authoring|编写指南]] · 由模板系统驱动 · 导航更新：{{REVISIONTIMESTAMP:Docs:navigation}}
+</div>
+</div>
+</includeonly><noinclude>
+{{Documentation}}
+
+; 用途
+: 闭合 <nowiki>{{docs/layout}}</nowiki> 打开的内容容器，并输出页脚。
+
+; 用法
+: 在文档页面底部写入 <nowiki>{{docs/end}}</nowiki>，需与页面顶部的 <nowiki>{{docs/layout}}</nowiki> 成对使用。
+
+; 动态能力
+: 页脚"导航更新"时间由 <code>{{REVISIONTIMESTAMP:Docs:navigation}}</code> 魔术字动态读取，
+: 每次修改 [[Docs:navigation]] 后自动更新，无需手动维护。
+</noinclude>

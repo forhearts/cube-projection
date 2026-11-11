@@ -1,0 +1,188 @@
+-- Module:DocsNav — 读取 Docs:navigation 渲染文档导航（GitBook 风格，daisyUI）
+--
+-- 导航数据源：Docs:navigation（独立页面，改菜单不动模板）。
+-- 格式（每行一个条目）：
+--   #topbar            → 顶部导航栏配置段（可选）
+--   #指南              → 侧边栏分组标题
+--   *文本|目标页面     → 侧边栏条目
+--   *品牌|文本|目标    → 顶部导航栏品牌（在 #topbar 段内，可选）
+--   *链接|文本|目标    → 顶部导航栏链接（在 #topbar 段内）
+--   *搜索|占位符      → 顶部导航栏搜索按钮（在 #topbar 段内，可选）
+-- 目标页面支持 /wiki/页面名、页面名、http(s):// 外链
+--
+-- 动态能力：
+--   - 侧边栏/导航栏完全由 Docs:navigation 驱动，改数据不动模板
+--   - 页脚"最后更新"由 {{REVISIONTIMESTAMP:Docs:navigation}} 魔术字提供（模板侧）
+local p = {}
+
+local function trim(s)
+	return (mw.text.trim(s or ''))
+end
+
+-- 从 Docs:navigation 读取导航配置
+local function getNavData()
+	local data = { groups = {}, items = {}, topbar = { links = {} } }
+	local page = mw.title.new('Docs:navigation')
+	local content = page and page:getContent()
+	if not content then
+		return data
+	end
+
+	local currentGroup = nil
+	local inTopbar = false
+	for line in mw.text.gsplit(content, '\n') do
+		line = trim(line)
+		if line ~= '' and not mw.ustring.match(line, '^%[%[') then
+			if mw.ustring.match(line, '^#') then
+				local g = mw.ustring.sub(line, 2)
+				inTopbar = (g == 'topbar')
+				if not inTopbar and g ~= '' then
+					currentGroup = g
+					table.insert(data.groups, currentGroup)
+				end
+			elseif mw.ustring.match(line, '^%*') then
+				local item = mw.ustring.sub(line, 2)
+				if inTopbar then
+					-- topbar 条目：*类型|参数1|参数2
+					local kind, a, b = item:match('^(.-)%|(.-)%|(.*)$')
+					if not kind then
+						kind, a = item:match('^(.-)%|(.*)$')
+					end
+					kind = trim(kind)
+					if kind == '品牌' or kind == 'brand' then
+						data.topbar.brand = { text = trim(a), target = trim(b) }
+					elseif kind == '链接' or kind == 'link' then
+						table.insert(data.topbar.links, { text = trim(a), target = trim(b) })
+					elseif kind == '搜索' or kind == 'search' then
+						data.topbar.search = trim(a) or '搜索'
+					end
+				else
+					local text, target = item:match('^(.-)%|(.*)$')
+					if text and target then
+						local entry = { text = trim(text), target = trim(target) }
+						table.insert(data.items, entry)
+						if currentGroup then
+							entry.group = currentGroup
+						end
+					end
+				end
+			end
+		end
+	end
+	return data
+end
+
+-- 转义用户可控文本，防止 wikitext/HTML 注入
+local function escape(s)
+	if not s then
+		return ''
+	end
+	s = tostring(s)
+	s = s:gsub('&', '&amp;')
+	s = s:gsub('<', '&lt;')
+	s = s:gsub('>', '&gt;')
+	s = s:gsub('"', '&quot;')
+	s = s:gsub("'", '&#39;')
+	s = s:gsub('|', '&bar;')
+	s = s:gsub('{', '&#123;')
+	s = s:gsub('}', '&#125;')
+	return s
+end
+
+-- 将目标页面转成 wikilink（避免使用被 Sanitizer 转义的 <a> 标签）
+-- 目标形如 /wiki/页面名 或 页面名；外链（http/https）走外部链接语法
+-- 指向当前页的 wikilink 由 MediaWiki 自动渲染为 <a class="selflink">，CSS 据此高亮
+local function link(target, text)
+	target = trim(target)
+	if target == '' then
+		return escape(text)
+	end
+	local bare = target
+	if bare:sub(1, 6) == '/wiki/' then
+		bare = bare:sub(7)
+	end
+	if bare:match('^https?://') then
+		return '[' .. escape(bare) .. ' ' .. escape(text) .. ']'
+	end
+	return '[[' .. escape(bare) .. '|' .. escape(text) .. ']]'
+end
+
+-- 渲染顶部导航栏（daisyUI navbar）
+-- 注意：不用 <svg>（MediaWiki Sanitizer 会过滤 Lua 输出中的 svg），图标用文字/emoji
+function p.topbar(frame)
+	local data = getNavData()
+	local out = {}
+
+	table.insert(out, '<div class="navbar bg-base-100 border-b border-base-300 px-4 min-h-14">')
+
+	-- 品牌（可点击）
+	local brand = data.topbar.brand
+	if brand and brand.text then
+		if brand.target and brand.target ~= '' then
+			table.insert(out, '<div class="navbar-start">' .. link(brand.target, brand.text) .. '</div>')
+		else
+			table.insert(out, '<div class="navbar-start"><span class="font-bold text-lg">' .. escape(brand.text) .. '</span></div>')
+		end
+	else
+		table.insert(out, '<div class="navbar-start"><span class="font-bold text-lg">📚 文档</span></div>')
+	end
+
+	-- 中间：链接
+	table.insert(out, '<div class="navbar-center hidden lg:flex">')
+	table.insert(out, '<ul class="menu menu-horizontal px-1 gap-1">')
+	for _, l in ipairs(data.topbar.links) do
+		table.insert(out, '<li>' .. link(l.target, l.text) .. '</li>')
+	end
+	table.insert(out, '</ul>')
+	table.insert(out, '</div>')
+
+	-- 右侧：搜索 + 移动端菜单
+	table.insert(out, '<div class="navbar-end gap-1">')
+	if data.topbar.search then
+		table.insert(out, '[[特殊:搜索|<span class="btn btn-ghost btn-circle" title="' .. escape(data.topbar.search) .. '">🔍</span>]]')
+	end
+	-- 移动端汉堡菜单
+	table.insert(out, '<div class="dropdown dropdown-end lg:hidden">')
+	table.insert(out, '<div tabindex="0" role="button" class="btn btn-ghost btn-circle">☰</div>')
+	table.insert(out, '<ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-50 mt-3 w-52 p-2 shadow">')
+	for _, l in ipairs(data.topbar.links) do
+		table.insert(out, '<li>' .. link(l.target, l.text) .. '</li>')
+	end
+	table.insert(out, '</ul>')
+	table.insert(out, '</div>')
+	table.insert(out, '</div>')
+
+	table.insert(out, '</div>')
+	return table.concat(out)
+end
+
+-- 渲染侧边栏导航（当前页由 MediaWiki 自动渲染为 selflink，CSS 高亮）
+function p.sidebar(frame)
+	local data = getNavData()
+	local out = {}
+
+	table.insert(out, '<div class="docs-sidebar">')
+	if #data.groups == 0 then
+		-- 无分组：直接列出所有条目
+		table.insert(out, '<ul class="nav flex-column">')
+		for _, item in ipairs(data.items) do
+			table.insert(out, '<li class="nav-item">' .. link(item.target, item.text) .. '</li>')
+		end
+		table.insert(out, '</ul>')
+	else
+		for _, group in ipairs(data.groups) do
+			table.insert(out, '<p class="docs-group">' .. escape(group) .. '</p>')
+			table.insert(out, '<ul class="nav flex-column">')
+			for _, item in ipairs(data.items) do
+				if item.group == group then
+					table.insert(out, '<li class="nav-item">' .. link(item.target, item.text) .. '</li>')
+				end
+			end
+			table.insert(out, '</ul>')
+		end
+	end
+	table.insert(out, '</div>')
+	return table.concat(out)
+end
+
+return p

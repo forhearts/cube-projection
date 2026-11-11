@@ -1,0 +1,130 @@
+-- Module:NavbarLight — 可复用浅色导航栏（参数化渲染）
+--
+-- 由 {{NavbarLight}} 调用：{{#invoke:NavbarLight|main}}
+-- 支持参数（全部可选，有默认值）：
+--   brand     品牌文本（默认「方之投影」）
+--   brandlink 品牌链接目标（默认「首页」）
+--   links     中间导航链接，格式「文本,目标;文本,目标」（可选）
+--   search    是否显示搜索按钮（true/false，默认 true）
+--   extra     更多下拉额外项，格式同 links（可选）
+--   account   是否显示账户项（true/false，默认 true）
+--
+-- 链接格式说明：用「文本,目标」而非「文本|目标」，避免模板参数中 | 的转义问题。
+-- 目标支持 /wiki/页面名、页面名、http(s):// 外链。
+--
+-- 动态能力：
+--   - 账户项由 MediaWiki:NavAccount.js 处理（已登录→用户页，未登录→创建账户）
+--   - 导航栏结构完全由参数驱动，改调用处即可，不动模板
+local p = {}
+
+local function trim(s)
+	return (mw.text.trim(s or ''))
+end
+
+-- 解析「文本,目标;文本,目标」为 { {text, target}, ... }
+local function parseLinks(raw)
+	local out = {}
+	for pair in mw.text.gsplit(raw or '', ';') do
+		pair = trim(pair)
+		if pair ~= '' then
+			local text, target = pair:match('^(.-),(.*)$')
+			if text and target then
+				out[#out + 1] = { text = trim(text), target = trim(target) }
+			end
+		end
+	end
+	return out
+end
+
+-- 转义用户可控文本，防止 wikitext/HTML 注入
+local function escape(s)
+	if not s then
+		return ''
+	end
+	s = tostring(s)
+	s = s:gsub('&', '&amp;')
+	s = s:gsub('<', '&lt;')
+	s = s:gsub('>', '&gt;')
+	s = s:gsub('"', '&quot;')
+	s = s:gsub("'", '&#39;')
+	s = s:gsub('|', '&bar;')
+	s = s:gsub('{', '&#123;')
+	s = s:gsub('}', '&#125;')
+	return s
+end
+
+-- 将目标页面转成 wikilink（避免使用被 Sanitizer 转义的 <a> 标签）
+-- 目标形如 /wiki/页面名 或 页面名；外链（http/https）走外部链接语法
+local function link(target, text)
+	target = trim(target)
+	if target == '' then
+		return escape(text)
+	end
+	local bare = target
+	if bare:sub(1, 6) == '/wiki/' then
+		bare = bare:sub(7)
+	end
+	if bare:match('^https?://') then
+		return '[' .. escape(bare) .. ' ' .. escape(text) .. ']'
+	end
+	return '[[' .. escape(bare) .. '|' .. escape(text) .. ']]'
+end
+
+-- 站内文件 URL（{{filepath:}} 魔术字）
+local function fileUrl(frame, name)
+	local url = frame:callParserFunction('filepath', name)
+	return escape(url or '')
+end
+
+function p.main(frame)
+	local args = frame.args or {}
+	local brand = trim(args['brand'] or '方之投影')
+	local brandlink = trim(args['brandlink'] or '首页')
+	local links = parseLinks(args['links'])
+	local extra = parseLinks(args['extra'])
+	local showSearch = trim(args['search'] or 'true') ~= 'false'
+	local showAccount = trim(args['account'] or 'true') ~= 'false'
+
+	local out = {}
+
+	out[#out + 1] = '<div class="navbar bg-base-100">'
+	out[#out + 1] = '<div class="navbar-start">'
+	out[#out + 1] = '<span class="btn btn-ghost px-2 gap-2 text-xl font-black font-sans">'
+	out[#out + 1] = '<img src="' .. fileUrl(frame, 'icon-logo.svg') .. '" width="24" height="24" alt="' .. escape(brand) .. '" /> '
+	out[#out + 1] = link(brandlink, brand)
+	out[#out + 1] = '</span>'
+	out[#out + 1] = '</div>'
+
+	-- 中间链接（桌面端显示）
+	if #links > 0 then
+		out[#out + 1] = '<div class="navbar-center hidden lg:flex">'
+		out[#out + 1] = '<ul class="menu menu-horizontal px-1 gap-1">'
+		for _, l in ipairs(links) do
+			out[#out + 1] = '<li>' .. link(l.target, l.text) .. '</li>'
+		end
+		out[#out + 1] = '</ul>'
+		out[#out + 1] = '</div>'
+	end
+
+	out[#out + 1] = '<div class="navbar-end">'
+	if showSearch then
+		out[#out + 1] = '[[特殊:搜索|<span class="btn btn-ghost btn-circle" title="搜索"><img src="' .. fileUrl(frame, 'icon-search.svg') .. '" width="16" height="16" alt="搜索" /></span>]]'
+	end
+	out[#out + 1] = '<div class="dropdown dropdown-end">'
+	out[#out + 1] = '<div tabindex="0" role="button" class="btn btn-ghost btn-circle" title="更多"><img src="' .. fileUrl(frame, 'icon-more.svg') .. '" width="16" height="16" alt="更多" /></div>'
+	out[#out + 1] = '<ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-30 p-2 shadow">'
+	for _, l in ipairs(extra) do
+		out[#out + 1] = '<li>' .. link(l.target, l.text) .. '</li>'
+	end
+	if showAccount then
+		out[#out + 1] = '<li id="nav-account">[[特殊:用户登录|账户]]</li>'
+	end
+	out[#out + 1] = '</ul>'
+	out[#out + 1] = '</div>'
+	out[#out + 1] = '</div>'
+
+	out[#out + 1] = '</div>'
+	return table.concat(out)
+end
+
+return p

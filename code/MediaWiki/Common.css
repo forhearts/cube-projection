@@ -1,0 +1,5 @@
+/* 加载期隐藏：防止 ResourceLoader 加载完成前原始页面一闪而过。
+   Common.js 会用内联 visibility:visible 覆盖此规则，无需手动移除。
+   仅当页面含 {{libs}} 模板且启用 data-cleanup=true 时才需要本规则。 */
+body { visibility: hidden; }
+body #cp-loading, body #cp-loading * { visibility: visible !important; }
