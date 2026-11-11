@@ -35,6 +35,18 @@
 .docs-content .timeline h3{margin:0 0 .25rem}
 .docs-content .timeline p{margin:0}
 .docs-content .alert p{margin:0}
+@media (max-width:767px){
+.docs-body{flex-direction:column}
+.docs-sidebar{width:auto;border-right:0;border-bottom:1px solid var(--docs-border);padding:.75rem 1rem;overflow-y:visible}
+.docs-group{margin:.5rem 0 .25rem}
+.docs-sidebar .nav{display:flex;flex-wrap:wrap;gap:.25rem}
+.docs-sidebar .nav-item{margin:0}
+.docs-sidebar .nav a{padding:.25rem .625rem;font-size:.85rem}
+.docs-content{padding:1.25rem 1rem 3rem;overflow-wrap:anywhere}
+.docs-content h2{font-size:1.25rem;margin-top:1.75rem}
+.docs-content table{display:block;overflow-x:auto;width:auto;max-width:100%}
+.docs-content th,.docs-content td{overflow-wrap:normal}
+}
 }}
 
 {{libs

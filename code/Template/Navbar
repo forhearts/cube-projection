@@ -36,7 +36,7 @@
 ; 参数
 : <code>brand</code> — 品牌文本（默认「方之投影」）
 : <code>brandlink</code> — 品牌链接目标（默认「首页」）
-: <code>links</code> — 中间导航链接，格式「文本,目标;文本,目标」（可选，桌面端显示）
+: <code>links</code> — 中间导航链接，格式「文本,目标;文本,目标」（可选，桌面端显示在中间，窄屏收进「更多」菜单）
 : <code>search</code> — 是否显示搜索按钮（true/false，默认 true）
 : <code>extra</code> — 更多下拉额外项，格式同 links（可选）
 : <code>account</code> — 是否显示账户项（true/false，默认 true）

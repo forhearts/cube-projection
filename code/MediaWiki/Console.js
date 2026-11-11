@@ -40,7 +40,7 @@
 		input.id = "console-search";
 		input.type = "search";
 		input.placeholder = "搜索作品…";
-		input.className = "input input-bordered input-sm w-64";
+		input.className = "input input-bordered input-sm w-full sm:w-64";
 
 		var count = document.createElement( "span" );
 		count.id = "console-count";

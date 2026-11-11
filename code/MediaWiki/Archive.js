@@ -50,7 +50,7 @@
 		input.id = "archive-search";
 		input.type = "search";
 		input.placeholder = "搜索条目…";
-		input.className = "input input-bordered input-sm w-64";
+		input.className = "input input-bordered input-sm w-full sm:w-64";
 
 		var count = document.createElement( "span" );
 		count.id = "archive-count";
@@ -162,7 +162,7 @@
 		sec.appendChild( h );
 
 		var list = document.createElement( "div" );
-		list.className = "flex flex-col gap-1";
+		list.className = "flex flex-row flex-wrap gap-x-4 gap-y-1 md:flex-col";
 
 		options.forEach( function ( o ) {
 			var label = document.createElement( "label" );

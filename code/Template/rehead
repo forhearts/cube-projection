@@ -12,7 +12,6 @@
 {{rehead
 |title=页面标题
 |meta=charset:UTF-8
-name:viewport, content:width=device-width, initial-scale=1.0
 |style=body{font-family:sans-serif}
 |icon=/wiki/特殊:文件路径
 |svg=<svg xmlns="…">…</svg>
@@ -20,7 +19,8 @@ name:viewport, content:width=device-width, initial-scale=1.0
 </pre>
 
 ; title: 页面标题
-; meta: meta 标签属性，多条用换行分隔（注意保留参数内的换行），每行生成一个 &lt;meta …&gt;
+; meta: meta 标签属性，多条用换行分隔（注意保留参数内的换行），每行生成一个 &lt;meta …&gt;。
+    未声明 viewport 时自动输出 <code>width=device-width, initial-scale=1</code>，仅需覆盖时才声明
 ; style: 内联 CSS 文本
 ; icon: 图标地址，仅支持站内路径（以 / 开头）或内联 SVG（data:image/svg+xml）。
     支持浅色/深色双 favicon：用换行分隔多行，每行 <code>[light:|dark:]值</code>，

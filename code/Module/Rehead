@@ -3,6 +3,7 @@
 -- Common.js 用 DOMParser 解析后插入 <head>（解析不执行脚本，且会二次过滤危险标签）。
 --
 -- 白名单内建于参数名：title / meta / style / svg / icon / link。
+-- meta 未声明 viewport 时自动输出 width=device-width 的默认 viewport。
 -- icon 仅允许站内路径（以 / 开头）或内联 SVG（data:image/svg+xml）。
 -- link 仅允许白名单 rel（如 ink-game），href 仅允许安全 URL。
 -- 支持多行，每行格式 [scheme:]value；scheme 为 light / dark / 空（默认）。
@@ -27,19 +28,26 @@ local META_ALLOWED = {
 }
 
 -- 把 "name:value, key2:value2" 解析为 { name = "value", key2 = "value2" }
--- 只保留白名单内的属性名
+-- 只保留白名单内的属性名。
+-- 不含「属性名:」的片段视为上一个值的续写（值本身含逗号时，如
+-- content:width=device-width, initial-scale=1 → content="width=device-width, initial-scale=1"）
 local function parseMetaLine(line)
-	local attrs = {}
+	local list = {}
 	for token in mw.text.gsplit(line, ',') do
 		token = mw.text.trim(token)
 		if token ~= '' then
-			local key, value = token:match('^([^:]+):(.*)$')
+			local key, value = token:match('^([%w-]+):(.*)$')
 			if key then
-				key = mw.text.trim(key)
-				if META_ALLOWED[key] then
-					attrs[#attrs + 1] = esc(key) .. '="' .. esc(mw.text.trim(value)) .. '"'
-				end
+				list[#list + 1] = { key = key, value = mw.text.trim(value) }
+			elseif #list > 0 then
+				list[#list].value = list[#list].value .. ', ' .. token
 			end
+		end
+	end
+	local attrs = {}
+	for _, a in ipairs(list) do
+		if META_ALLOWED[a.key] then
+			attrs[#attrs + 1] = esc(a.key) .. '="' .. esc(a.value) .. '"'
 		end
 	end
 	return attrs
@@ -161,14 +169,26 @@ function p.main(frame)
 	end
 
 	-- meta（多条用换行分隔）
+	local hasViewport = false
 	for line in mw.text.gsplit(args['meta'] or '', '\n') do
 		line = mw.text.trim(line)
 		if line ~= '' then
 			local attrs = parseMetaLine(line)
 			if #attrs > 0 then
+				for _, a in ipairs(attrs) do
+					if a:lower() == 'name="viewport"' then
+						hasViewport = true
+					end
+				end
 				out[#out + 1] = '<meta ' .. table.concat(attrs, ' ') .. ' />'
 			end
 		end
+	end
+
+	-- 默认 viewport：Common.js 重写 head 时会丢掉 MediaWiki 自带的 viewport，
+	-- 不补上的话手机会按约 980px 的桌面宽度渲染。页面在 meta= 中声明了 viewport 时以页面为准。
+	if not hasViewport then
+		out[#out + 1] = '<meta name="viewport" content="width=device-width, initial-scale=1" />'
 	end
 
 	-- style（过滤注入向量；防 </style> 提前闭合）

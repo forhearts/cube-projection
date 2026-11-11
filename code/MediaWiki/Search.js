@@ -75,7 +75,7 @@
 		input.id = "search-input";
 		input.type = "search";
 		input.placeholder = "查询…支持 ES 语法：incategory:Works  insource:\"正文\"  Uni*  \"短语\"  A AND B";
-		input.className = "input input-bordered flex-1 min-w-64";
+		input.className = "input input-bordered flex-1 min-w-0";
 
 		var hint = document.createElement( "span" );
 		hint.id = "search-count";
@@ -341,7 +341,7 @@
 		sec.appendChild( h );
 
 		var rows = document.createElement( "div" );
-		rows.className = "flex flex-col gap-1.5";
+		rows.className = "flex flex-row flex-wrap gap-x-4 gap-y-1.5 md:flex-col";
 		sec.appendChild( rows );
 
 		return {

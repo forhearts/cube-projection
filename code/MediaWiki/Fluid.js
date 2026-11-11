@@ -19,7 +19,7 @@
 	canvas.id = "fluid-canvas";
 	canvas.style.cssText =
 		"position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);" +
-		"width:480px;height:480px;z-index:0;display:block;";
+		"width:min(480px,90vw);height:min(480px,90vw);z-index:0;display:block;";
 	document.body.appendChild( canvas );
 
 	var glass = document.createElement( "div" );

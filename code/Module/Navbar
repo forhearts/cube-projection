@@ -113,7 +113,7 @@ function p.main(frame)
 	out[#out + 1] = '</span>'
 	out[#out + 1] = '</div>'
 
-	-- 中间链接（桌面端显示）
+	-- 中间链接（桌面端显示；窄屏下收进「更多」菜单）
 	if #links > 0 then
 		out[#out + 1] = '<div class="navbar-center hidden lg:flex">'
 		out[#out + 1] = '<ul class="menu menu-horizontal px-1 gap-1">'
@@ -134,6 +134,10 @@ function p.main(frame)
 	out[#out + 1] = '<div class="dropdown dropdown-end">'
 	out[#out + 1] = '<div tabindex="0" role="button" class="btn btn-ghost btn-circle" title="更多">' .. icon('icon-more.svg', 16) .. '</div>'
 	out[#out + 1] = '<ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-30 p-2 shadow">'
+	-- 窄屏下中间链接被隐藏，收进更多菜单（lg:hidden 与上方 hidden lg:flex 互补）
+	for _, l in ipairs(links) do
+		out[#out + 1] = '<li class="lg:hidden">' .. link(l.target, l.text) .. '</li>'
+	end
 	for _, l in ipairs(extra) do
 		out[#out + 1] = '<li>' .. link(l.target, l.text) .. '</li>'
 	end
