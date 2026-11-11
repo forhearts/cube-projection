@@ -20,7 +20,6 @@ context: |
   - reference/       项目设计大纲
   - prototypes/      静态 HTML 原型，不是 wiki 页面
   - _local/          本地专用（gitignore）：线上页面快照（含 csrfToken）、调试文件、已废弃的本地托管库 —— 仅作参考，不要修改或引用进产物
-  - bot/             机器人凭据（gitignore）—— 敏感，禁止读取、引用或写入任何产物
 
   技术约定：
   - 职责划分：Lua 优先（URL 生成/去重/消毒、HTML 生成在 Module 中完成），JS 只做浏览器端必须的事。
@@ -28,7 +27,9 @@ context: |
   - 第三方库一律走 jsdelivr CDN（Miraheze CSP 白名单），本站不托管第三方 JS/CSS。
   - UI 框架：daisyUI + Tailwind（亦可用 Bootstrap 等 Module:Libs 中已注册的库）；文档页正文直接用 Bootstrap 原生类。
   - 模板参数中链接用「文本,目标;文本,目标」格式，避免 | 转义问题。
-  - 无构建流程、无自动化测试；变更通过手动上传到 wiki 生效，验证方式为在 wiki 上预览/浏览页面。
+  - 无构建流程、无自动化测试。站点有 Cloudflare 防护，bot 账号基本无法登录；
+    发布方式：通过浏览器 MCP 在已登录的 wiki 页面控制台执行 new mw.Api().postWithToken('csrf', {action:'edit', ...}) 提交，
+    随后在浏览器中打开页面验证。
 
 rules:
   proposal:
@@ -38,10 +39,10 @@ rules:
     - 遵守 Lua 优先、JS 最小化的职责划分；若违背须说明理由
   tasks:
     - 每个任务指明要修改的本地文件
-    - 最后包含「上传到 wiki 并在线验证」的任务，列出需上传的页面清单及上传顺序（被依赖的 Module/Template 先上传）
+    - 最后包含「经浏览器控制台提交到 wiki 并在线验证」的任务，列出需提交的页面清单及提交顺序（被依赖的 Module/Template 先上传）
 
 operations:
   apply:
     guidance:
-      - 只修改 code/ 等源码目录，不要修改 _local/ 与 bot/
+      - 只修改 code/ 等源码目录，不要修改 _local/
       - 新增文档页时同步更新 code/docs/navigation 与 code/docs/README.md
