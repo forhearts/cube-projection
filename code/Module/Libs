@@ -77,6 +77,12 @@ local LIBRARIES = {
 			page = 'MediaWiki:NavAccount.js',
 			version = '1',
 			depends = {}
+		},
+		agentapi = {
+			-- 站内页面：Agent API 代理接口（MediaWiki:AgentAPI.js，action=raw 输出）
+			page = 'MediaWiki:AgentAPI.js',
+			version = '1',
+			depends = {}
 		}
 	},
 	css = {
