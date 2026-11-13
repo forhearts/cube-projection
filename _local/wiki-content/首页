@@ -1,0 +1,19 @@
+{{rehead
+|title=方之投影（Cube's Projection）
+|icon=light:{{filepath:Favicon-light.svg}}
+dark:{{filepath:Favicon-dark.svg}}
+}}
+{{libs
+|css=daisyui
+|js=tailwind,fluid
+|cleanup=true
+|rehead=true
+}}
+{{Navbar
+|extra=文档,/wiki/Docs:guide/page-authoring
+}}
+
+<div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full px-4 text-center z-[3]">
+<p class="text-xl tracking-widest mb-6">你好，观测者。</p>
+<span class="btn btn-outline btn-lg whitespace-nowrap px-8 py-6 text-xl sm:px-10 sm:text-2xl">[[观测档案库|前往观测档案库]]</span>
+</div>

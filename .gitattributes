@@ -3,5 +3,3 @@
 # wiki 页面源码无后缀，帮助 GitHub 识别语言
 code/Module/** linguist-language=Lua
 code/Template/** linguist-language=Wikitext
-code/docs/** linguist-language=Wikitext
-code/docs/README.md linguist-language=Markdown

@@ -1,0 +1,32 @@
+{{rehead
+|title=搜索 - 方之投影（Cube's Projection）
+|icon=light:{{filepath:Favicon-light.svg}}
+dark:{{filepath:Favicon-dark.svg}}
+}}
+{{libs
+|css=daisyui
+|js=tailwind,search
+|cleanup=true
+|rehead=true
+}}
+{{Navbar
+|extra=文档,/wiki/Docs:guide/page-authoring
+}}
+
+<div class="px-6 pt-10 pb-2">
+<h1 class="text-3xl font-bold">搜索</h1>
+<p class="text-base-content/70 mt-2">Elasticsearch 驱动的全文搜索（基于 CirrusSearch）。</p>
+</div>
+
+<div class="px-6 py-6">
+<div id="search-box"></div>
+<div id="search-facets"></div>
+<div class="flex flex-col md:flex-row gap-6">
+<div class="md:w-52 flex-none">
+<div id="search-controls" class="flex flex-col gap-5"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div id="search-results"></div>
+</div>
+</div>
+</div>

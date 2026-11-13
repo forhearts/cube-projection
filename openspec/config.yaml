@@ -6,7 +6,7 @@ context: |
   Keep OpenSpec structural headings and SHALL/MUST keywords in English.
 
   项目：「方之投影」（Cube's Projection）—— 开放群创世界观项目，载体是一个 MediaWiki 站点。
-  底层公理：①存在独立于任何描述；②任何描述都不能完整表达存在。（详见 reference/plan.md、worldbuilding/）
+  底层公理：①存在独立于任何描述；②任何描述都不能完整表达存在。（详见 _local/reference/plan.md、_local/worldbuilding/）
 
   目录结构：
   - code/            wiki 页面源码，本地路径 ↔ wiki 页面名一一对应（无文件后缀）
@@ -14,12 +14,11 @@ context: |
     - Module/*        → 模块:（Lua / Scribunto：Libs、Rehead、Navbar、NavbarLight、NavAccount、DocsNav）
     - Template/*      → 模板:（libs、rehead、Navbar、docs/layout、docs/end 等）
     - File/*.svg      → 文件:（站点图标，Module 中按文件名引用）
-    - docs/*          → Docs: 命名空间（编写指南，docs/README.md 为索引；侧边栏菜单数据在 docs/navigation）
     - Tool/、Test/、首页、论坛、观测档案库 → 对应主命名空间页面
-  - worldbuilding/   世界观设定文档（Markdown）
-  - reference/       项目设计大纲
-  - prototypes/      静态 HTML 原型，不是 wiki 页面
-  - _local/          本地专用（gitignore）：线上页面快照（含 csrfToken）、调试文件、已废弃的本地托管库 —— 仅作参考，不要修改或引用进产物
+  - _local/          本地专用（gitignore，不进仓库）：
+    - wiki-content/  wiki 页面内容（首页、论坛、观测档案库、Tool/*、Docs 指南等），只在本地维护，通过浏览器控制台提交到 wiki
+    - reference/     项目设计大纲；worldbuilding/ 世界观设定；prototypes/ 静态 HTML 原型
+    - snapshots/     线上页面快照（含 csrfToken）；debug/ 调试文件；legacy/ 已废弃的本地托管库
 
   技术约定：
   - 职责划分：Lua 优先（URL 生成/去重/消毒、HTML 生成在 Module 中完成），JS 只做浏览器端必须的事。
@@ -45,4 +44,4 @@ operations:
   apply:
     guidance:
       - 只修改 code/ 等源码目录，不要修改 _local/
-      - 新增文档页时同步更新 code/docs/navigation 与 code/docs/README.md
+      - 新增文档页时同步更新 _local/wiki-content/docs/navigation 与 _local/wiki-content/docs/README.md

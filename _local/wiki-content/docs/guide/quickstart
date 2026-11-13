@@ -1,0 +1,98 @@
+{{docs/layout}}
+
+<div class="hero bg-base-100">
+<div class="hero-content text-left">
+<div class="max-w-3xl">
+<h1 class="text-3xl font-bold">快速开始</h1>
+<p class="py-4 text-base-content/70">五分钟上手本站的模板系统：从零创建一个自定义页面。</p>
+</div>
+</div>
+</div>
+
+<div class="alert alert-info my-4">
+<span><strong>前置条件</strong><br/>你需要一个本站账户（未登录也能编辑，但建议先 <nowiki>[[特殊:创建账户|创建账户]]</nowiki>）。</span>
+</div>
+
+<h2 id="sec-1">创建页面</h2>
+
+<ul class="timeline timeline-vertical">
+<li>
+<div class="timeline-start timeline-box">1</div>
+<div class="timeline-middle">●</div>
+<div class="timeline-end">
+<h3>打开编辑界面</h3>
+<p>在地址栏输入 <code>/wiki/你的页面名</code>，点击「创建」或「编辑源代码」。</p>
+</div>
+<hr/>
+</li>
+<li>
+<div class="timeline-start timeline-box">2</div>
+<div class="timeline-middle">●</div>
+<div class="timeline-end">
+<h3>写入模板骨架</h3>
+<p>在编辑框中粘贴以下内容：</p>
+<pre>{{rehead
+|title=我的页面
+}}
+
+{{libs
+|css=daisyui
+|js=tailwind
+|cleanup=true
+|rehead=true
+}}
+
+{{Navbar}}
+
+&lt;div class="px-6 py-10"&gt;
+&lt;h1 class="text-3xl font-bold"&gt;你好，世界&lt;/h1&gt;
+&lt;p class="mt-2 text-base-content/70"&gt;这是我的第一个页面。&lt;/p&gt;
+&lt;/div&gt;</pre>
+</div>
+<hr/>
+</li>
+<li>
+<div class="timeline-start timeline-box">3</div>
+<div class="timeline-middle">●</div>
+<div class="timeline-end">
+<h3>保存并查看</h3>
+<p>点击「保存更改」。页面会先显示加载动画，然后只显示你的内容——MediaWiki 的导航栏、侧栏、页脚全部被移除。</p>
+</div>
+</li>
+</ul>
+
+<h2 id="sec-2">常用模板速查</h2>
+
+<table>
+<tr><th>模板</th><th>用途</th></tr>
+<tr><td><nowiki>{{Navbar}}</nowiki></td><td>顶部导航栏（logo + 搜索 + 更多）</td></tr>
+<tr><td><nowiki>{{libs}}</nowiki></td><td>加载 JS/CSS 库</td></tr>
+<tr><td><nowiki>{{rehead}}</nowiki></td><td>自定义 &lt;head&gt;（标题、meta、样式、图标）</td></tr>
+<tr><td><nowiki>{{docs/layout}}</nowiki></td><td>文档页外壳（GitBook 风格）</td></tr>
+</table>
+
+<div class="alert alert-warning my-4">
+<span><strong>注意</strong><br/>页面里不能直接写 <code>&lt;style&gt;</code> 或 <code>&lt;script&gt;</code> 标签（会被过滤），
+请用 <nowiki>{{rehead}}</nowiki> 的 <code>style</code> 参数或 <nowiki>{{libs}}</nowiki> 加载库。</span>
+</div>
+
+<h2 id="sec-3">下一步</h2>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+<div class="card bg-base-100 border border-base-300">
+<div class="card-body">
+<div class="text-2xl">📖</div>
+<h3 class="card-title">页面编写指南</h3>
+<p>详细了解 {{libs}} 与 {{rehead}} 的全部参数。</p>
+</div>
+</div>
+<div class="card bg-base-100 border border-base-300">
+<div class="card-body">
+<div class="text-2xl">🧩</div>
+<h3 class="card-title">模板说明</h3>
+<p>本站所有可用模板与模块的说明。</p>
+</div>
+</div>
+</div>
+
+{{docs/end}}
