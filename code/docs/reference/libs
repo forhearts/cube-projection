@@ -1,0 +1,59 @@
+{{docs/layout}}
+
+<div class="hero bg-base-100">
+<div class="hero-content text-left">
+<div class="max-w-3xl">
+<h1 class="text-3xl font-bold">可用库列表</h1>
+<p class="py-4 text-base-content/70">[[Module:Libs]] 注册表中所有可用的 JS/CSS 库。</p>
+</div>
+</div>
+</div>
+
+<h2 id="sec-1">JS 库</h2>
+
+<table>
+<tr><th>库名</th><th>说明</th><th>CDN</th></tr>
+<tr><td><code>tailwind</code></td><td>Tailwind CSS 浏览器运行时（daisyUI 依赖）</td><td>jsdelivr</td></tr>
+<tr><td><code>bootstrap</code></td><td>Bootstrap 5 完整包</td><td>jsdelivr</td></tr>
+<tr><td><code>stimulus</code></td><td>Stimulus 3（ES module，挂到 window.Stimulus）</td><td>jsdelivr</td></tr>
+<tr><td><code>archive</code></td><td>观测档案库（API 拉取分类成员 + 搜索/排序/过滤）</td><td>站内</td></tr>
+<tr><td><code>navaccount</code></td><td>导航栏账户项（已登录→用户页，未登录→创建账户）</td><td>站内</td></tr>
+</table>
+
+<h2 id="sec-2">CSS 库</h2>
+
+<table>
+<tr><th>库名</th><th>说明</th><th>CDN</th></tr>
+<tr><td><code>daisyui</code></td><td>daisyUI 5（按需组件，纯 CSS 零依赖）</td><td>jsdelivr</td></tr>
+<tr><td><code>animate</code></td><td>Animate.css 4（动画效果）</td><td>jsdelivr</td></tr>
+<tr><td><code>bootstrap</code></td><td>Bootstrap 5 CSS</td><td>jsdelivr</td></tr>
+<tr><td><code>bulma</code></td><td>Bulma 1.0</td><td>jsdelivr</td></tr>
+<tr><td><code>milligram</code></td><td>Milligram 1.4（极简 CSS 框架）</td><td>jsdelivr</td></tr>
+</table>
+
+<h2 id="sec-3">daisyUI 组件清单</h2>
+
+<code>daisyui=组件名,组件名,...</code> 按需加载，可用组件（节选）：
+
+<pre>button, card, navbar, hero, menu, badge, input, alert,
+dropdown, modal, tabs, tooltip, progress, loading, avatar</pre>
+
+完整清单见 https://daisyui.com/docs/cdn/
+
+<h2 id="sec-4">daisyUI 主题</h2>
+
+<code>daisyui-theme=主题名</code> 可选主题（节选）：
+
+<pre>light, dark, cupcake, bumblebee, emerald, corporate,
+synthwave, retro, cyberpunk, valentine, halloween,
+garden, forest, aqua, lofi, pastel, fantasy, wireframe,
+black, luxury, dracula, cmyk, autumn, business, acid,
+lemonade, night, coffee, winter</pre>
+
+完整清单见 https://daisyui.com/docs/themes/
+
+<div class="alert alert-warning my-4">
+<span><strong>注意</strong><br/>未登记的库名会被忽略，不会加载任何内容。新增库需在 [[Module:Libs]] 注册表中登记。</span>
+</div>
+
+{{docs/end}}

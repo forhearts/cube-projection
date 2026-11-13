@@ -1,0 +1,24 @@
+{{rehead
+|title=控制台 - 方之投影（Cube's Projection）
+|icon=light:{{filepath:Favicon-light.svg}}
+dark:{{filepath:Favicon-dark.svg}}
+}}
+{{libs
+|css=daisyui
+|js=tailwind,console
+|cleanup=true
+|rehead=true
+}}
+{{Navbar
+|extra=文档,/wiki/Docs:guide/page-authoring
+}}
+
+<div class="px-6 pt-10 pb-2">
+<h1 class="text-3xl font-bold">控制台</h1>
+<p class="text-base-content/70 mt-2">管理你的全部作品。</p>
+</div>
+
+<div class="px-6 py-6">
+<div id="console-stats"></div>
+<div id="console-list"></div>
+</div>

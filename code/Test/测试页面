@@ -1,0 +1,38 @@
+{{rehead
+|title=测试页面 - 方之投影（Cube's Projection）
+|meta=charset:UTF-8
+name:viewport, content:width=device-width, initial-scale=1.0
+name:robots, content:index,follow
+|style=body{font-family:system-ui,sans-serif;background:#f5f5f5}.test-card{border:1px solid #ccc;border-radius:8px;padding:16px;margin:8px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+|icon=/wiki/特殊:文件路径
+}}
+{{libs
+|js=tailwind,bootstrap
+|css=daisyui,animate,bootstrap
+|cleanup=true
+|rehead=true
+}}
+
+<div class="test-card">
+<p>'''测试页面'''：验证 libs / rehead / cleanup 机制是否正常工作。</p>
+</div>
+
+== 一、libs 加载检查 ==
+
+* Tailwind：<span class="bg-blue-500 text-white px-2 py-1 rounded">bg-blue-500</span>
+* daisyUI：<button class="btn btn-primary">daisyUI 按钮</button>
+* Bootstrap：<button type="button" class="btn btn-secondary">Bootstrap 按钮</button>
+* animate.css：<div class="animate__animated animate__bounce">弹跳</div>
+
+== 二、rehead 检查 ==
+
+查看浏览器开发者工具，确认 <code>&lt;head&gt;</code> 中：
+
+* <code>&lt;title&gt;测试页面&lt;/title&gt;</code> 已生效（浏览器标签页标题应变化）
+* 存在 <code>&lt;meta charset="UTF-8"&gt;</code>
+* 存在 <code>@media</code> 之外的自定义 <code>&lt;style&gt;</code>（body 背景应为浅灰色）
+* libs 注入的 script/link 依然保留在 <code>&lt;head&gt;</code> 中
+
+== 三、cleanup 检查 ==
+
+页面应只显示本页内容，MediaWiki 的导航栏、侧栏、页脚、编辑按钮等界面元素应全部消失。

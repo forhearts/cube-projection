@@ -1,0 +1,24 @@
+{{rehead
+|title=观测档案库 - 方之投影（Cube's Projection）
+|icon=light:{{filepath:Favicon-light.svg}}
+dark:{{filepath:Favicon-dark.svg}}
+}}
+{{libs
+|css=daisyui
+|js=tailwind,archive
+|cleanup=true
+|rehead=true
+}}
+{{Navbar
+|extra=文档,/wiki/Docs:guide/page-authoring
+}}
+
+<div class="px-6 pt-10 pb-2">
+<h1 class="text-3xl font-bold">观测档案库</h1>
+<p class="text-base-content/70 mt-2">全部观测条目,由观测平台自动同步。</p>
+</div>
+
+<div class="px-6 py-6">
+<div id="archive-search-container"></div>
+<div id="archive-browser-container"></div>
+</div>

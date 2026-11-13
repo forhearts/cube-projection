@@ -16,7 +16,6 @@ context: |
     - File/*.svg      → 文件:（站点图标，Module 中按文件名引用）
     - Tool/、Test/、首页、论坛、观测档案库 → 对应主命名空间页面
   - _local/          本地专用（gitignore，不进仓库）：
-    - wiki-content/  wiki 页面内容（首页、论坛、观测档案库、Tool/*、Docs 指南等），只在本地维护，通过浏览器控制台提交到 wiki
     - reference/     项目设计大纲；worldbuilding/ 世界观设定；prototypes/ 静态 HTML 原型
     - snapshots/     线上页面快照（含 csrfToken）；debug/ 调试文件；legacy/ 已废弃的本地托管库
 
@@ -44,4 +43,4 @@ operations:
   apply:
     guidance:
       - 只修改 code/ 等源码目录，不要修改 _local/
-      - 新增文档页时同步更新 _local/wiki-content/docs/navigation 与 _local/wiki-content/docs/README.md
+      - 新增文档页时同步更新 code/docs/navigation 与 code/docs/README.md

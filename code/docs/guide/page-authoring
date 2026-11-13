@@ -1,0 +1,220 @@
+{{docs/layout}}
+
+<div class="hero bg-base-100">
+<div class="hero-content text-left">
+<div class="max-w-3xl">
+<h1 class="text-3xl font-bold">页面编写指南</h1>
+<p class="py-4 text-base-content/70">如何在本站使用模板系统编写页面：加载库、自定义 head、清理界面。</p>
+</div>
+</div>
+</div>
+
+<div class="alert alert-info my-4">
+<span><strong>本页面即示例</strong><br/>本页面本身就是一个 <nowiki>{{libs}}</nowiki> 示例——通过 <nowiki>{{docs/layout}}</nowiki> 已加载 daisyUI，并用 cleanup 移除了全部界面元素。</span>
+</div>
+
+<h2 id="sec-1">快速开始</h2>
+
+在任意页面的源代码顶部，加入以下两段模板调用：
+
+<pre>{{rehead
+|title=页面标题
+|meta=charset:UTF-8
+|style=body{font-family:sans-serif}
+|icon=/wiki/文件路径
+}}
+
+{{libs
+|js=tailwind
+|css=daisyui
+|cleanup=true
+|rehead=true
+}}</pre>
+
+保存后刷新，页面就会：
+
+* 只显示你的正文内容（MediaWiki 的导航栏、侧栏、页脚全部移除）
+* 按需加载你声明的 JS/CSS 库
+* 使用你自定义的 <code>&lt;head&gt;</code>（标题、meta、样式、图标）
+
+<h2 id="sec-2"><nowiki>{{libs}}</nowiki> 模板</h2>
+
+<nowiki>{{libs}}</nowiki> 负责加载第三方资源。语法：
+
+<pre>{{libs
+|js=模块名,模块名,...
+|css=模块名,模块名,...
+|daisyui=组件名,组件名,...
+|daisyui-theme=主题名
+|cleanup=true|false
+|rehead=true|false
+}}</pre>
+
+; js
+: 要加载的 JS 库，多个用英文逗号分隔。可选，默认不加载。
+: 目前可用：<code>tailwind</code>、<code>bootstrap</code>、<code>stimulus</code>、<code>archive</code>、<code>navaccount</code>
+: 所有库均直接引用 CDN（jsdelivr），本站不托管第三方 JS/CSS 文件。
+
+; css
+: 要加载的 CSS 库，多个用英文逗号分隔。可选，默认不加载。
+: 目前可用：<code>daisyui</code>、<code>animate</code>、<code>bootstrap</code>、<code>bulma</code>、<code>milligram</code>
+
+; daisyui
+: daisyUI 按需组件清单，逗号分隔（可选）。仅当 <code>css</code> 含 <code>daisyui</code> 时生效。
+: 声明后由 [[Module:Libs]] 在服务端生成 jsdelivr combine URL，只拉取 base + 所列组件 + 主题，
+: 纯 CSS 零依赖（无需 Tailwind），体积远小于整包。示例：
+: <code>daisyui=button,card,hero</code>。组件清单见
+: https://daisyui.com/docs/cdn/ （如 button、card、navbar、hero、menu、badge、input、alert…）。
+
+; daisyui-theme
+: daisyUI 主题名（可选，默认 <code>light</code>）。如 <code>dark</code>、<code>dracula</code>、
+: <code>emerald</code> 等，见 https://daisyui.com/docs/themes/
+
+; cleanup
+: 设为 <code>true</code> 时，清空页面除正文外的所有界面元素
+: （导航栏、侧栏、页脚、编辑链接等）。默认 <code>false</code>。
+
+; rehead
+: 设为 <code>true</code> 时，使用 <nowiki>{{rehead}}</nowiki> 的内容重写 <code>&lt;head&gt;</code>。
+: 默认 <code>false</code>。启用后请同时在页面加入 <nowiki>{{rehead}}</nowiki>。
+
+<div class="alert alert-warning my-4">
+<span><strong>注意</strong><br/>所有库名都在 [[Module:Libs]] 的注册表中登记。未登记的模块名会被忽略，不会加载任何内容。</span>
+</div>
+
+<h2 id="sec-3"><nowiki>{{rehead}}</nowiki> 模板</h2>
+
+<nowiki>{{rehead}}</nowiki> 用于自定义页面的 <code>&lt;head&gt;</code>。语法：
+
+<pre>{{rehead
+|title=页面标题
+|meta=charset:UTF-8
+|style=body{background:#f5f5f5}
+|icon=/wiki/文件路径
+}}</pre>
+
+; title
+: 页面标题，显示在浏览器标签页上。
+
+; meta
+: 多个 meta 标签，每行一个；一行内多个属性用英文逗号分隔。
+: 每个属性写 <code>属性名:值</code>。例：
+: <code>name:viewport, content:width=device-width, maximum-scale=1</code>
+: 未声明 viewport 时会自动加上 <code>width=device-width, initial-scale=1</code>，保证手机按设备宽度显示；只有需要覆盖时才写。
+
+; style
+: 自定义内联 CSS，直接写样式文本，不需要 <code>&lt;style&gt;</code> 标签。
+
+; icon
+: 网站图标地址，必须是站内路径（以 <code>/</code> 开头），
+: 或内联 SVG（<code>data:image/svg+xml,...</code>）。
+
+<div class="alert alert-success my-4">
+<span><strong>实现说明</strong><br/><nowiki>{{rehead}}</nowiki> 的内容由 [[Module:Rehead]]（Lua）校验并生成最终 HTML，
+Common.js 只负责插入 DOM。所有校验（meta 属性白名单、style 注入过滤、svg 危险内容拒绝）都在 Lua 侧完成。</span>
+</div>
+
+<h2 id="sec-4">导航栏</h2>
+
+全站可复用导航栏由 <nowiki>{{Navbar}}</nowiki> 提供（daisyUI 实现，品牌、链接、搜索、下拉全部参数化）：
+
+<pre>{{Navbar
+|links=观测档案库,/wiki/观测档案库;分类:Works,/wiki/分类:Works
+|extra=文档,/wiki/Docs:guide/page-authoring
+}}</pre>
+
+; 主题
+: 明暗由 daisyUI 主题统一控制：<code>theme=dark</code> 即深色，无需区分 light/dark 版本。
+
+; 账户项
+: 已登录 → 链接到当前用户页；未登录 → 链接到创建账户。
+: 由 [[MediaWiki:NavAccount.js]] 处理（独立脚本，不依赖 Common.js）。
+
+<h2 id="sec-5">示例页面</h2>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+<div class="card bg-base-100 border border-base-300">
+<div class="card-body">
+<div class="text-2xl">🃏</div>
+<h3 class="card-title">daisyUI 卡片</h3>
+<p>使用 daisyUI 的卡片组件展示内容。</p>
+</div>
+</div>
+<div class="card bg-base-100 border border-base-300">
+<div class="card-body">
+<div class="text-2xl">✨</div>
+<h3 class="card-title">动画效果</h3>
+<p>使用 animate.css 添加弹跳等动画。</p>
+</div>
+</div>
+</div>
+
+; 使用 daisyUI 的卡片
+
+<pre>{{docs/layout}}
+
+&lt;div class="card bg-base-100 shadow-xl"&gt;
+  &lt;div class="card-body"&gt;
+    &lt;h2 class="card-title"&gt;你好，世界&lt;/h2&gt;
+    &lt;p&gt;这是一张使用 daisyUI 的卡片。&lt;/p&gt;
+    &lt;div class="card-actions"&gt;
+      &lt;button class="btn btn-primary"&gt;按钮&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+{{docs/end}}</pre>
+
+; 带动画效果
+
+<pre>{{docs/layout}}
+
+&lt;div class="animate__animated animate__bounce"&gt;弹跳的文本&lt;/div&gt;
+
+{{docs/end}}</pre>
+
+<h2 id="sec-6">常见问题</h2>
+
+<ul class="timeline timeline-vertical">
+<li>
+<div class="timeline-start timeline-box">1</div>
+<div class="timeline-middle">●</div>
+<div class="timeline-end">
+<h3>为什么我的页面什么都没有显示？</h3>
+<p>确认 <nowiki>{{libs}}</nowiki> 的 <code>cleanup</code> 已启用且正文内容确实存在。
+cleanup 只保留 <code>.mw-parser-output</code> 中的内容，如果正文为空，页面会显示为空白。</p>
+</div>
+<hr/>
+</li>
+<li>
+<div class="timeline-start timeline-box">2</div>
+<div class="timeline-middle">●</div>
+<div class="timeline-end">
+<h3>为什么按钮没有样式？</h3>
+<p>确认该库已加载（在 <nowiki>{{libs}}</nowiki> 的 <code>js</code>/<code>css</code> 参数中声明），
+且库名已在 [[Module:Libs]] 注册表登记。打开浏览器控制台（F12）查看是否有
+<code>[libs]</code> 开头的错误。</p>
+</div>
+<hr/>
+</li>
+<li>
+<div class="timeline-start timeline-box">3</div>
+<div class="timeline-middle">●</div>
+<div class="timeline-end">
+<h3>为什么标签页标题没变？</h3>
+<p>需要同时 <code>rehead=true</code> 并使用 <nowiki>{{rehead}}</nowiki> 设置 <code>title</code>。</p>
+</div>
+<hr/>
+</li>
+<li>
+<div class="timeline-start timeline-box">4</div>
+<div class="timeline-middle">●</div>
+<div class="timeline-end">
+<h3>我能在页面里写 <code>&lt;style&gt;</code> 或 <code>&lt;script&gt;</code> 吗？</h3>
+<p>不能。本站对 <code>&lt;style&gt;</code>/<code>&lt;script&gt;</code> 等标签做了过滤，
+请改用 <nowiki>{{rehead}}</nowiki> 的 <code>style</code> 参数，或通过 <nowiki>{{libs}}</nowiki> 加载已登记的库。</p>
+</div>
+</li>
+</ul>
+
+{{docs/end}}
