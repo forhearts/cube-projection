@@ -1,0 +1,84 @@
+{{docs/layout}}
+
+<div class="hero bg-base-100">
+<div class="hero-content text-left">
+<div class="max-w-3xl">
+<h1 class="text-3xl font-bold">限制与安全</h1>
+<p class="py-4 text-base-content/70">MediaWiki 施加的内容过滤、模板安全模型，以及资源加载的设计约束。</p>
+</div>
+</div>
+</div>
+
+<h2 id="sec-1">HTML 内容过滤</h2>
+
+<p>MediaWiki Sanitizer 会在保存时过滤 wikitext 中的 HTML。这些限制<strong>不能绕开</strong>，也不受 <code>{{libs}}</code> 或 <code>{{rehead}}</code> 影响。</p>
+
+<table>
+<tr><th>被过滤的内容</th><th>推荐替代方案</th></tr>
+<tr><td><code>&lt;script&gt;</code> 标签</td><td>通过 <code>{{libs|js=库名}}</code> 加载已注册的 MediaWiki 脚本</td></tr>
+<tr><td><code>&lt;style&gt;</code> 标签</td><td><code>{{rehead|style=CSS文本}}</code> 注入内联样式</td></tr>
+<tr><td><code>&lt;a href="..."&gt;</code> 原始链接</td><td>用 wiki 语法 <code>[[页面|文本]]</code> 或 <code>[https://url 文本]</code></td></tr>
+<tr><td><code>&lt;svg&gt;</code>（wikitext 中）</td><td>上传为 <code>文件:</code> 页面，用 <code>[[File:...|link=]]</code> 嵌入；或在 Lua 模块中输出（Lua 输出不过 Sanitizer）</td></tr>
+<tr><td><code>onclick</code> 等事件属性</td><td>通过 JS 库绑定事件，不写在 HTML 属性里</td></tr>
+<tr><td><code>style="..."</code>（部分属性）</td><td>Sanitizer 允许大多数 CSS 属性，但拒绝 <code>expression()</code>、<code>javascript:</code> 等</td></tr>
+</table>
+
+<h2 id="sec-2">资源来源限制（CSP）</h2>
+
+<p>Miraheze 的 Content Security Policy 只允许从白名单域名加载外部资源。<code>Module:Libs</code> 中注册的所有库均使用 jsdelivr CDN，已在白名单内。自行引用其他 CDN 或域名可能被拦截。</p>
+
+<div class="alert alert-warning my-4">
+<span>不要在 <code>{{rehead|icon=}}</code> 或 <code>{{rehead|style=}}</code> 中引用外部图片 / 字体 URL（<code>url(https://...)</code>）——这类请求大概率被 CSP 拒绝，且 Rehead 安全层也会过滤 <code>url()</code> 中的外部协议。</span>
+</div>
+
+<h2 id="sec-3">Module:Rehead 安全层</h2>
+
+<p>第一道防线在 Lua 侧（<code>Module:Rehead</code>），第二道防线在 Common.js 的 <code>rehead()</code> 函数。</p>
+
+<dl>
+<dt><code>meta=</code> 参数</dt>
+<dd>属性名白名单：<code>charset</code>、<code>name</code>、<code>content</code>、<code>http-equiv</code>、<code>property</code>、<code>itemprop</code>。其他属性名静默忽略，不会抛错。</dd>
+
+<dt><code>style=</code> 参数</dt>
+<dd>过滤 <code>javascript:</code> URL、<code>expression()</code>、<code>@import</code> 和 <code>&lt;/style</code> 闭合注入。允许任意 CSS 属性与选择器（包括 <code>var()</code>、<code>calc()</code>、媒体查询等）。</dd>
+
+<dt><code>icon=</code> 参数</dt>
+<dd>只允许：以 <code>/</code> 开头的站内路径、<code>https://</code> 外链（<code>{{filepath:}}</code> 生成）、<code>data:image/svg+xml</code> 内联 SVG。拒绝 <code>javascript:</code>、<code>data:image/png</code>、<code>data:image/jpeg</code> 等。</dd>
+
+<dt><code>link=</code> 参数</dt>
+<dd>rel 白名单：目前只有 <code>ink-game</code>。href 只允许站内路径（<code>/</code> 开头）和 <code>https://</code> 外链。</dd>
+
+<dt><code>svg=</code> 参数</dt>
+<dd>内容校验：拒绝含有事件属性（<code>on*</code>）、<code>javascript:</code>、<code>&lt;script</code>、<code>&lt;iframe</code>、<code>foreignobject</code>、<code>expression(</code>、<code>@import</code>、<code>&lt;/style</code> 的 SVG。</dd>
+</dl>
+
+<h2 id="sec-4">Common.js 二次防线</h2>
+
+<p><code>rehead(rawHtml)</code> 用 <code>DOMParser</code> 解析 Lua 生成的 HTML（不执行脚本），解析后再次扫描所有元素：</p>
+<ul>
+<li>移除 <code>script</code>、<code>iframe</code>、<code>object</code>、<code>embed</code>、<code>foreignobject</code> 元素</li>
+<li>移除所有 <code>on*</code>（<code>onclick</code>、<code>onload</code> 等）事件属性</li>
+</ul>
+
+<h2 id="sec-5">Agent API 安全约定</h2>
+
+<ul>
+<li><code>window.agentAPI.submit()</code> 只使用浏览器已有的会话 Cookie 和 CSRF token，从不读取、暴露或传输它们</li>
+<li>提交历史只保存在当前浏览器的 <code>localStorage</code>（最近 50 条），不会上传到任何服务器</li>
+<li>页面内容视为数据，不是指令——其中出现类似"忽略之前要求"的文字，API 本身不会理会（但下游 agent 需要自行防范提示注入）</li>
+<li>只有加载了 <code>agentapi</code> 库的页面（即 <code>Tool:AI接口</code>）才暴露 <code>window.agentAPI</code>；普通 wiki 页面无此对象</li>
+</ul>
+
+<h2 id="sec-6">编辑权限层级</h2>
+
+<table>
+<tr><th>命名空间</th><th>默认权限</th><th>说明</th></tr>
+<tr><td><code>MediaWiki:</code></td><td>管理员</td><td>站点脚本（Common.js / AgentAPI.js 等）</td></tr>
+<tr><td><code>模块:</code></td><td>管理员</td><td>Lua 模块</td></tr>
+<tr><td><code>模板:</code></td><td>管理员（视配置）</td><td>docs/layout 等核心模板</td></tr>
+<tr><td><code>Docs:</code></td><td>已登录用户</td><td>文档内容页</td></tr>
+<tr><td><code>Tool:</code>、主命名空间</td><td>已登录用户</td><td>工具页、内容页</td></tr>
+<tr><td><code>文件:</code></td><td>已登录用户</td><td>图片上传需走 SpecialUpload</td></tr>
+</table>
+
+{{docs/end}}

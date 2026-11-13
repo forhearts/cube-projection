@@ -1,7 +1,16 @@
-#指南
-*页面编写指南|/wiki/Docs:guide/page-authoring
+#入门
 *快速开始|/wiki/Docs:guide/quickstart
+*页面编写指南|/wiki/Docs:guide/page-authoring
 *模板说明|/wiki/Docs:guide/templates
+
+#进阶
+*Agent 接口|/wiki/Docs:guide/agent-api
+*常见问题|/wiki/Docs:guide/troubleshooting
 
 #参考
 *可用库列表|/wiki/Docs:reference/libs
+*模块参考|/wiki/Docs:reference/modules
+*限制与安全|/wiki/Docs:reference/limits
+
+#面向 Agent
+*LLM 文档（llms.txt）|/wiki/Docs:llms.txt

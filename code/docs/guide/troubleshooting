@@ -1,0 +1,78 @@
+{{docs/layout}}
+
+<div class="hero bg-base-100">
+<div class="hero-content text-left">
+<div class="max-w-3xl">
+<h1 class="text-3xl font-bold">常见问题</h1>
+<p class="py-4 text-base-content/70">排查页面空白、样式丢失、提交失败等常见问题。</p>
+</div>
+</div>
+</div>
+
+<h2 id="sec-1">页面显示</h2>
+
+<dl>
+<dt>页面什么都没有显示（空白）</dt>
+<dd>最常见原因：<code>cleanup=true</code> 已启用，但 <code>.mw-parser-output</code> 内没有任何内容，或 JS 加载失败导致 cleanup 没执行完。打开浏览器控制台（<kbd>F12</kbd>），切到 Console 面板，查找 <code>[libs]</code> 开头的日志。资源加载报错时会出现 <code>[libs] 加载 CSS/JS 失败</code>。</dd>
+
+<dt>标签页标题没变</dt>
+<dd>需要同时满足两个条件：在 <code>{{rehead}}</code> 里设置了 <code>title=</code>，<strong>并且</strong> <code>{{libs}}</code> 里启用了 <code>rehead=true</code>。两者缺一不可。</dd>
+
+<dt>手机显示像缩小版桌面页面（约 980px 宽）</dt>
+<dd>页面缺少 viewport meta。如果用了 <code>rehead=true</code>，<code>{{rehead}}</code> 会自动补上默认的 <code>width=device-width, initial-scale=1</code>；如果没用 rehead，需要手动在 <code>meta=</code> 参数里声明：<pre>{{rehead
+|meta=name:viewport, content:width=device-width, initial-scale=1
+}}</pre></dd>
+
+<dt>页面加载后一闪，出现原始 wiki 界面然后才切换</dt>
+<dd>这是正常现象，Common.css 中的 <code>body{visibility:hidden}</code> 负责遮挡，Common.js 加载完成后解除。如果闪烁很明显，说明 Common.css 没有正常加载，检查 MediaWiki:Common.css 是否有 <code>body { visibility: hidden; }</code>。</dd>
+</dl>
+
+<h2 id="sec-2">样式与库</h2>
+
+<dl>
+<dt>按钮、卡片等 daisyUI 组件没有样式</dt>
+<dd>检查 <code>{{libs}}</code> 的 <code>daisyui=</code> 参数里是否包含对应的组件名。按需加载模式下，没有声明的组件不会加载样式。例如用了 <code>&lt;div class="hero"&gt;</code> 但没有在 <code>daisyui=</code> 里加 <code>hero</code>，该组件就没有样式。</dd>
+
+<dt>Tailwind 工具类不生效（如 <code>text-blue-500</code>、<code>mt-4</code>）</dt>
+<dd>确认 <code>{{libs|js=tailwind}}</code> 已声明。Tailwind 通过浏览器运行时（CDN Play CDN）工作，依赖 <code>js=tailwind</code>，不是 CSS 库。</dd>
+
+<dt>CSS 自定义样式不生效</dt>
+<dd>写在 <code>{{rehead|style=...}}</code> 里的样式注入时机晚于 daisyUI/Tailwind 加载完成后——通常没问题。如果出现优先级冲突，在选择器后加 <code>!important</code>，或用更具体的选择器。</dd>
+
+<dt>Animate.css 动画没效果</dt>
+<dd>需要声明 <code>css=animate</code> 并在元素上同时加 <code>animate__animated</code> 基类和具体动画类，如 <code>animate__bounce</code>。两个类缺一不可。</dd>
+</dl>
+
+<h2 id="sec-3">编辑与提交</h2>
+
+<dl>
+<dt>不能在页面里写 <code>&lt;style&gt;</code> 或 <code>&lt;script&gt;</code></dt>
+<dd>MediaWiki Sanitizer 会过滤这两个标签。样式放到 <code>{{rehead|style=...}}</code> 参数；脚本必须通过 <code>{{libs|js=库名}}</code> 加载已注册的库。需要新脚本时，先在 [[模块:Libs]] 里注册，再通过 Agent API 或管理员账号上传 <code>MediaWiki:</code> 页面。</dd>
+
+<dt>用 <code>&lt;a href="..."&gt;</code> 写的链接显示为原始文本</dt>
+<dd>MediaWiki 会过滤原始 <code>&lt;a&gt;</code> 标签。链接必须用 wiki 语法：<code>[[页面名|链接文本]]</code>（站内）或 <code>[https://url 链接文本]</code>（外部）。在 Lua 模块里输出链接也要走 wikilink，见 <code>Module:Navbar</code> 的 <code>link()</code> 函数。</dd>
+
+<dt>通过浏览器控制台提交时报 <code>badtoken</code></dt>
+<dd>当前标签页的会话可能已过期，或不在已登录的 wiki 页面上。刷新页面重新获取 token，或先执行 <code>mw.user.isAnon()</code> 确认已登录。</dd>
+
+<dt>提交报 <code>protectedpage</code></dt>
+<dd><code>MediaWiki:</code>、<code>模块:</code>、<code>模板:</code> 等命名空间通常只有管理员能编辑。切换到具有管理员权限的账号，或请管理员代为提交。</dd>
+
+<dt>用 Agent API 提交长文本失败</dt>
+<dd>Windows 命令行对命令长度有约 32 K 字符的限制。超过约 20 KB 的源码 base64 后会超限。解决方案：用 <code>Docs:guide/agent-api</code> 里的 Node 脚本，它通过 base64 编码传入正文；或把页面拆成多个较小的子页面分开提交。</dd>
+</dl>
+
+<h2 id="sec-4">导航栏与文档布局</h2>
+
+<dl>
+<dt>Navbar 中间链接在手机上不见了</dt>
+<dd>这是设计行为：<code>links=</code> 参数里的链接在桌面端（<code>lg</code> 断点以上）显示在导航栏中间，窄屏下自动收进「更多」下拉菜单，不会消失，只是换了入口。</dd>
+
+<dt>文档侧边栏的当前页高亮不正确</dt>
+<dd>高亮由 CSS 类 <code>.selflink</code> 驱动，该类由 MediaWiki 自动加到指向当前页的 wikilink 上。如果高亮不对，检查 <code>Docs:navigation</code> 里的目标路径是否与当前页名精确一致（大小写、命名空间都要匹配）。</dd>
+
+<dt>修改了 <code>Docs:navigation</code> 但侧边栏没更新</dt>
+<dd>侧边栏由 [[模块:DocsNav]] 在服务端渲染，受 MediaWiki 页面缓存影响。在 URL 后加 <code>?action=purge</code> 强制清除缓存，或等待缓存自然过期（通常几分钟以内）。</dd>
+</dl>
+
+{{docs/end}}

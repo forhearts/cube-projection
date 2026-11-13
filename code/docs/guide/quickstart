@@ -78,7 +78,7 @@
 
 <h2 id="sec-3">下一步</h2>
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 my-6">
 <div class="card bg-base-100 border border-base-300">
 <div class="card-body">
 <div class="text-2xl">📖</div>
@@ -90,7 +90,35 @@
 <div class="card-body">
 <div class="text-2xl">🧩</div>
 <h3 class="card-title">模板说明</h3>
-<p>本站所有可用模板与模块的说明。</p>
+<p>本站所有可用模板的完整参考。</p>
+</div>
+</div>
+<div class="card bg-base-100 border border-base-300">
+<div class="card-body">
+<div class="text-2xl">🔌</div>
+<h3 class="card-title">Agent 接口</h3>
+<p>通过浏览器会话让 AI agent 提交编辑。</p>
+</div>
+</div>
+<div class="card bg-base-100 border border-base-300">
+<div class="card-body">
+<div class="text-2xl">🔧</div>
+<h3 class="card-title">常见问题</h3>
+<p>排查空白页面、样式丢失、提交失败等。</p>
+</div>
+</div>
+<div class="card bg-base-100 border border-base-300">
+<div class="card-body">
+<div class="text-2xl">📚</div>
+<h3 class="card-title">模块参考</h3>
+<p>所有 Lua 模块的接口与参数说明。</p>
+</div>
+</div>
+<div class="card bg-base-100 border border-base-300">
+<div class="card-body">
+<div class="text-2xl">🤖</div>
+<h3 class="card-title">LLM 文档</h3>
+<p>面向 AI agent 的机器可读参考。</p>
 </div>
 </div>
 </div>

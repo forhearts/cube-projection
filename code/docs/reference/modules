@@ -1,0 +1,93 @@
+{{docs/layout}}
+
+<div class="hero bg-base-100">
+<div class="hero-content text-left">
+<div class="max-w-3xl">
+<h1 class="text-3xl font-bold">模块参考</h1>
+<p class="py-4 text-base-content/70">本站所有 Lua 模块的接口说明：用途、入口函数、参数与返回值。</p>
+</div>
+</div>
+</div>
+
+<div class="alert alert-info my-4">
+<span>模块由 Scribunto 执行，只在服务端运行，不可在浏览器控制台调用。要测试模块行为，在 <code>Special:ScribuntoConsole</code> 页面里用 <code>=p.functionName(mw.getCurrentFrame())</code> 形式调用。</span>
+</div>
+
+<h2 id="sec-libs">Module:Libs</h2>
+
+<p>生成第三方资源 URL 并以 JSON 文本节点输出，供 <code>MediaWiki:Common.js</code> 注入页面。由 <code>{{libs}}</code> 调用。</p>
+
+<dl>
+<dt><code>p.build(frame)</code></dt>
+<dd>主入口。读取 <code>js=</code>、<code>css=</code>、<code>daisyui=</code>、<code>daisyui-theme=</code> 参数，查注册表，生成 URL 列表，返回 JSON 字符串。</dd>
+<dd>返回值格式：<pre>{"js":["https://cdn...","..."],"css":["https://cdn..."],"mods":[]}</pre></dd>
+<dd><code>mods</code> 是 ES module 列表（如 Stimulus），由 Common.js 用 <code>&lt;script type="module"&gt;</code> 加载。</dd>
+</dl>
+
+<p><strong>注册表位置</strong>：模块顶部的 <code>JS_REGISTRY</code> 与 <code>CSS_REGISTRY</code> Lua table。新增库需在此登记 URL，库名才在 <code>{{libs}}</code> 中生效。</p>
+
+<p><strong>daisyUI 按需 URL</strong>：组件名与主题名通过 jsdelivr combine API 拼接为单一 URL，格式：<br/>
+<code>https://cdn.jsdelivr.net/combine/npm/daisyui@5/dist/base.min.css,npm/daisyui@5/dist/components/button.min.css,...,npm/daisyui@5/dist/themes/light.min.css</code></p>
+
+<h2 id="sec-rehead">Module:Rehead</h2>
+
+<p>校验并生成 <code>&lt;head&gt;</code> 内容 HTML，存入 <code>.mw-rehead</code> 文本节点，由 Common.js 在 rehead 阶段读取并插入 DOM。由 <code>{{rehead}}</code> 调用。</p>
+
+<dl>
+<dt><code>p.main(frame)</code></dt>
+<dd>读取 <code>title=</code>、<code>meta=</code>、<code>style=</code>、<code>icon=</code>、<code>svg=</code>、<code>link=</code> 参数，校验后生成 HTML 字符串。</dd>
+<dd>安全措施：meta 属性名白名单（charset/name/content/http-equiv/property/itemprop）；style 过滤 <code>javascript:</code>、<code>expression()</code>、<code>@import</code>；icon 只允许站内路径与 <code>data:image/svg+xml</code>；link rel 只允许白名单（目前：<code>ink-game</code>）。</dd>
+<dd>自动行为：未声明 viewport 时补 <code>&lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</code>，防止手机以桌面宽度渲染。</dd>
+</dl>
+
+<h2 id="sec-navbar">Module:Navbar</h2>
+
+<p>渲染全站通用导航栏（daisyUI <code>navbar</code>），由 <code>{{Navbar}}</code> 调用。</p>
+
+<dl>
+<dt><code>p.main(frame)</code></dt>
+<dd>参数：<code>brand</code>（默认「方之投影」）、<code>brandlink</code>（默认「首页」）、<code>links</code>（格式 <code>文本,目标;文本,目标</code>）、<code>extra</code>（同格式，进「更多」下拉）、<code>search</code>（true/false，默认 true）、<code>account</code>（true/false，默认 true）、<code>theme</code>（daisyUI 主题名，默认 light）。</dd>
+<dd>链接格式说明：用逗号分隔文本与目标，分号分隔多条，避开 <code>|</code> 的转义问题。外链（http/https）用外部链接语法；分类/文件命名空间自动加前导冒号。</dd>
+<dd>移动端：<code>links</code> 中的链接桌面端（<code>lg:</code>）显示在中间，窄屏收进「更多」下拉，通过 <code>lg:hidden</code> 互补实现。</dd>
+</dl>
+
+<h2 id="sec-navbarlight">Module:NavbarLight</h2>
+
+<p>轻量版导航栏，只有品牌 + 搜索，不依赖 daisyUI。用于不加载 daisyUI 的普通 wiki 页面（通过 MediaWiki:NavbarLight.js 注入）。</p>
+
+<dl>
+<dt><code>p.main(frame)</code></dt>
+<dd>不接受参数，输出固定结构的简单导航栏 HTML。</dd>
+</dl>
+
+<h2 id="sec-docsnav">Module:DocsNav</h2>
+
+<p>读取 <code>Docs:navigation</code> 页面，渲染文档侧边栏（和可选顶部导航栏）。由 <code>{{docs/layout}}</code> 中的 <code>{{#invoke:DocsNav|sidebar}}</code> 调用。</p>
+
+<dl>
+<dt>导航数据格式（<code>Docs:navigation</code>）</dt>
+<dd><pre>#分组名       → 侧边栏分组标题
+*链接文本|目标 → 侧边栏条目（目标支持 /wiki/页面名、页面名、外链）
+
+#topbar        → 顶部导航配置段（可选）
+*品牌|文本|目标
+*链接|文本|目标
+*搜索|占位符</pre></dd>
+
+<dt><code>p.sidebar(frame)</code></dt>
+<dd>渲染侧边栏 <code>&lt;div class="docs-sidebar"&gt;</code> 及其内部分组与链接列表。当前页由 MediaWiki 自动渲染为 <code>&lt;a class="selflink"&gt;</code>，模板的 <code>.selflink</code> CSS 负责高亮。</dd>
+
+<dt><code>p.topbar(frame)</code></dt>
+<dd>渲染顶部导航栏（<code>Docs:navigation</code> 的 <code>#topbar</code> 段）。目前文档页顶部使用的是 <code>{{Navbar}}</code> 而非此函数，保留供扩展。</dd>
+</dl>
+
+<h2 id="sec-navaccount">Module:NavAccount</h2>
+
+<p>输出单行 HTML 供 <code>MediaWiki:NavAccount.js</code> 在导航栏账户项位置替换：已登录显示用户页链接，未登录显示创建账户链接。</p>
+
+<dl>
+<dt><code>p.main(frame)</code></dt>
+<dd>返回 HTML 字符串，包含 <code>mw.user.getName()</code> 或匿名状态的链接。由于 Lua 在服务端渲染，匿名/登录状态由客户端 JS 二次判断（<code>MediaWiki:NavAccount.js</code> 在 DOM ready 后替换 <code>#nav-account</code> 节点）。</dd>
+</dl>
+
+{{docs/end}}
