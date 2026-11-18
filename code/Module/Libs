@@ -91,6 +91,12 @@ local LIBRARIES = {
 			selfinit = true,
 			depends = {}
 		},
+		stimulusdemo = {
+			-- Stimulus 测试用控制器（MediaWiki:StimulusDemo.js，仅供 Test:库测试 使用）
+			page = 'MediaWiki:StimulusDemo.js',
+			version = '1',
+			depends = { js = { 'stimulus' } }
+		},
 		agentapi = {
 			-- 站内页面：Agent API 代理接口（MediaWiki:AgentAPI.js，action=raw 输出）
 			page = 'MediaWiki:AgentAPI.js',
