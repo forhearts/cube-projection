@@ -13,6 +13,7 @@
 
 <table>
 <tr><th>库名</th><th>说明</th><th>CDN</th></tr>
+<tr><td><code>datastar</code></td><td>Datastar v1.0.5 — 轻量超媒体框架，用 <code>data-*</code> 属性驱动前端响应性，支持 SSE 后端推送</td><td>jsdelivr gh</td></tr>
 <tr><td><code>tailwind</code></td><td>Tailwind CSS 浏览器运行时（daisyUI 依赖）</td><td>jsdelivr</td></tr>
 <tr><td><code>bootstrap</code></td><td>Bootstrap 5 完整包</td><td>jsdelivr</td></tr>
 <tr><td><code>stimulus</code></td><td>Stimulus 3（ES module，挂到 window.Stimulus）</td><td>jsdelivr</td></tr>

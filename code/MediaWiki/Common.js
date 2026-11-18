@@ -161,9 +161,10 @@
 	 * @param {string[]} jsUrls
 	 * @param {string[]} cssUrls
 	 * @param {string[]} mods
+	 * @param {string[]} esm 自初始化 ES module 的 URL（如 datastar，无需全局变量）
 	 * @return {Promise}
 	 */
-	function inject( jsUrls, cssUrls, mods ) {
+	function inject( jsUrls, cssUrls, mods, esm ) {
 		var pending = [];
 		( jsUrls || [] ).forEach( function ( url ) {
 			if ( typeof url !== "string" || !url ) {
@@ -191,6 +192,14 @@
 			}
 			url = url.replace( /\u200b/g, "" );
 			pending.push( loadModule( url ) );
+		} );
+		// 自初始化 ES module（如 datastar）：外链 <script type="module">，onload 后结束
+		( esm || [] ).forEach( function ( url ) {
+			if ( typeof url !== "string" || !url ) {
+				return;
+			}
+			url = url.replace( /\u200b/g, "" );
+			pending.push( loadEsm( url ) );
 		} );
 		return Promise.all( pending );
 	}
@@ -329,6 +338,32 @@
 		} );
 	}
 
+	/**
+	 * 加载自初始化的 ES module（如 datastar）。
+	 *
+	 * 与 loadModule 的区别：模块执行时自行扫描 DOM、不需要挂全局变量，
+	 * 因此直接用外链 <script type="module" src>，以 onload/onerror 结束等待。
+	 *
+	 * @param {string} url
+	 * @return {Promise}
+	 */
+	function loadEsm( url ) {
+		return new Promise( function ( resolve ) {
+			var script = document.createElement( "script" );
+			script.type = "module";
+			script.src = url;
+			script.setAttribute( LIB_TAG, "1" );
+			script.onload = function () {
+				resolve();
+			};
+			script.onerror = function () {
+				mw.log.error( "[libs] 加载 ES module 失败: " + url );
+				resolve();
+			};
+			document.head.appendChild( script );
+		} );
+	}
+
 	mw.loader.using( [ "mediawiki.util" ] ).then( function () {
 		var nodes = document.querySelectorAll( ".mw-use-resource" );
 		if ( !nodes.length ) {
@@ -343,6 +378,7 @@
 		var jsUrls = [];
 		var cssUrls = [];
 		var modUrls = [];
+		var esmUrls = [];
 		var seen = {};
 		Array.prototype.forEach.call( nodes, function ( node ) {
 			if ( node.dataset.cleanup === "true" ) {
@@ -378,9 +414,14 @@
 						}
 					} );
 					( data.mods || [] ).forEach( function ( url ) {
-						if ( url && !seen[ "mod:" + url ] ) {
-							seen[ "mod:" + url ] = true;
-							modUrls.push( url );
+						if ( url && !seen[ "mod:" + ( url.url || url ) ] ) {
+							seen[ "mod:" + ( url.url || url ) ] = true;
+							if ( typeof url === "object" ) {
+								// Module:Libs 以 { url } 对象输出的自初始化 ES module（如 datastar）
+								esmUrls.push( url.url );
+							} else {
+								modUrls.push( url );
+							}
 						}
 					} );
 					( data.css || [] ).forEach( function ( url ) {
@@ -423,7 +464,7 @@
 			hideLoading( overlay, timer );
 		}, 15000 );
 
-		return inject( jsUrls, cssUrls, modUrls ).then( function () {
+		return inject( jsUrls, cssUrls, modUrls, esmUrls ).then( function () {
 			removeHideCss();
 			hideLoading( overlay, timer );
 		} );

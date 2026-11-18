@@ -78,6 +78,14 @@ local LIBRARIES = {
 			version = '1',
 			depends = {}
 		},
+		datastar = {
+			-- Datastar：超媒体前端框架（data-* 属性驱动），自初始化的 ES module，不挂全局变量
+			-- 版本锁定 v1.0.5（官方推荐的 jsdelivr gh 通道 bundles/datastar.js）
+			url = 'https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.5/bundles/datastar.js',
+			type = 'module',
+			selfinit = true,
+			depends = {}
+		},
 		agentapi = {
 			-- 站内页面：Agent API 代理接口（MediaWiki:AgentAPI.js，action=raw 输出）
 			page = 'MediaWiki:AgentAPI.js',
@@ -234,7 +242,12 @@ local function collectLib(type, name, out, seen, mods)
 	local url = resolveUrl(type, name, type == 'js' and 'text/javascript' or 'text/css')
 	if url ~= '' then
 		if type == 'js' and mod.type == 'module' then
-			mods[#mods + 1] = protectUrl(url)
+			if mod.selfinit then
+				-- 自初始化模块以 { url = ... } 对象输出，Common.js 据此走 loadEsm（不依赖 window.Stimulus）
+				mods[#mods + 1] = { url = (protectUrl(url)) }
+			else
+				mods[#mods + 1] = protectUrl(url)
+			end
 		else
 			out[#out + 1] = protectUrl(url)
 		end
