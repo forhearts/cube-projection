@@ -111,6 +111,7 @@ Registered JS libraries (Module:Libs):
 - `tailwind` — Tailwind CSS browser runtime (required for daisyUI)
 - `bootstrap` — Bootstrap 5 bundle
 - `stimulus` — Stimulus 3 (ES module, exposed as window.Stimulus)
+- `htmx` — htmx 2.0.4, hypermedia-driven AJAX/SSE/WebSocket via `hx-*` attributes, exposed as window.htmx
 - `datastar` — Datastar v1.0.5 (self-initializing ES module; use data-* attributes for reactivity)
 - `archive` — 观测档案库 viewer (fetch categories, search, filter, sort)
 - `navaccount` — Navbar account item (login state detection)

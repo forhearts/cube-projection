@@ -78,6 +78,11 @@ local LIBRARIES = {
 			version = '1',
 			depends = {}
 		},
+		htmx = {
+			-- htmx 2.0.4：超媒体驱动，扩展 HTML 属性实现 AJAX / SSE / WebSocket
+			url = 'https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js',
+			depends = {}
+		},
 		datastar = {
 			-- Datastar：超媒体前端框架（data-* 属性驱动），自初始化的 ES module，不挂全局变量
 			-- 版本锁定 v1.0.5（官方推荐的 jsdelivr gh 通道 bundles/datastar.js）
