@@ -13,8 +13,8 @@
 
 <table>
 <tr><th>库名</th><th>说明</th><th>CDN</th></tr>
-<tr><td><code>htmx</code></td><td>htmx 2.0.4 — 超媒体方式扩展 HTML，用 <code>hx-*</code> 属性发起 AJAX / SSE / WebSocket，挂到 <code>window.htmx</code></td><td>jsdelivr</td></tr>
-<tr><td><code>datastar</code></td><td>Datastar v1.0.5 — 轻量超媒体框架，用 <code>data-*</code> 属性驱动前端响应性，支持 SSE 后端推送</td><td>jsdelivr gh</td></tr>
+<tr><td><code>htmx</code></td><td>htmx 2.0.4 — 超媒体方式扩展 HTML，用 <code>data-hx-*</code> 属性发起 AJAX / SSE / WebSocket（不带 data- 前缀的 <code>hx-*</code> 会被 MediaWiki 过滤），挂到 <code>window.htmx</code></td><td>jsdelivr</td></tr>
+<tr><td><code>datastar</code></td><td>Datastar v1.0.5 — 轻量超媒体框架，用 <code>data-*</code> 属性驱动前端响应性，支持 SSE 后端推送。MediaWiki 会过滤带冒号的属性，官方的 <code>data-on:click</code> 写法无效，需用 <code>data-init="el.onclick = function(){ $count++ }"</code> 绑定事件（<code>data-signals</code>、<code>data-text</code>、<code>data-show</code> 可正常使用）；示例见 [[Test:库测试]]</td><td>jsdelivr gh</td></tr>
 <tr><td><code>tailwind</code></td><td>Tailwind CSS 浏览器运行时（daisyUI 依赖）</td><td>jsdelivr</td></tr>
 <tr><td><code>bootstrap</code></td><td>Bootstrap 5 完整包</td><td>jsdelivr</td></tr>
 <tr><td><code>stimulus</code></td><td>Stimulus 3（ES module，挂到 window.Stimulus）</td><td>jsdelivr</td></tr>

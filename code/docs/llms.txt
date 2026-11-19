@@ -111,8 +111,8 @@ Registered JS libraries (Module:Libs):
 - `tailwind` — Tailwind CSS browser runtime (required for daisyUI)
 - `bootstrap` — Bootstrap 5 bundle
 - `stimulus` — Stimulus 3 (ES module, exposed as window.Stimulus)
-- `htmx` — htmx 2.0.4, hypermedia-driven AJAX/SSE/WebSocket via `hx-*` attributes, exposed as window.htmx
-- `datastar` — Datastar v1.0.5 (self-initializing ES module; use data-* attributes for reactivity)
+- `htmx` — htmx 2.0.4, hypermedia-driven AJAX/SSE/WebSocket via `data-hx-*` attributes (plain `hx-*` is stripped by MediaWiki's Sanitizer), exposed as window.htmx
+- `datastar` — Datastar v1.0.5 (self-initializing ES module). MediaWiki strips attribute names that contain a colon, so the official `data-on:click` does NOT work here; bind events with `data-init="el.onclick = function(){ $count++ }"` instead. `data-signals`, `data-text` and `data-show` work as documented (verified live on Test:库测试)
 - `archive` — 观测档案库 viewer (fetch categories, search, filter, sort)
 - `navaccount` — Navbar account item (login state detection)
 - `agentapi` — Agent API (exposes window.agentAPI.submit)

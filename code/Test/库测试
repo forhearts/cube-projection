@@ -27,10 +27,10 @@
 <div class="card bg-base-100 border border-base-300 mt-3"><div class="card-body" data-signals="{count: 0}">
 <p>计数：<span class="badge badge-primary" data-text="$count">未运行</span>　两倍：<span class="badge" data-text="$count * 2">未运行</span>　<span class="badge badge-success" data-show="$count">已点击过</span></p>
 <div class="flex gap-2">
-<span class="btn btn-primary btn-sm" data-on-click="$count++">+1（data-on-click）</span>
+<span class="btn btn-primary btn-sm" data-init="el.onclick = function(){ $count++ }">+1（data-init 写法）</span>
 <span class="btn btn-sm" data-on:click="$count++">+1（data-on:click，对照）</span>
 </div>
-<p class="mt-2 text-sm text-base-content/60">预期：两个徽章先显示 0；“已点击过”在计数为 0 时隐藏。第一个按钮能让数字增加；冒号写法预计被过滤，点击无反应。若徽章一直显示“未运行”，说明 Datastar 没有执行，先查控制台有没有 CSP（unsafe-eval）报错。表达式里不要写 <code>&gt;</code> 或 <code>&lt;</code>，会破坏标签。</p>
+<p class="mt-2 text-sm text-base-content/60">预期：两个徽章先显示 0；“已点击过”在计数为 0 时隐藏。第一个按钮（data-init 写法）点击后两个数字都增加，“已点击过”出现；冒号写法 data-on:click 会被 MediaWiki 过滤，点击无反应。Datastar 1.0.5 只认带冒号的 data-on:*，所以 data-on-click 这类无冒号写法不生效。若徽章一直显示“未运行”，说明 Datastar 没有执行，先查控制台有没有 CSP（unsafe-eval）报错。表达式里不要写 <code>&gt;</code> 或 <code>&lt;</code>，会破坏标签。</p>
 </div></div>
 <h2 class="mt-8 text-xl font-semibold">3. Stimulus（data-controller / data-action）</h2>
 <div class="card bg-base-100 border border-base-300 mt-3"><div class="card-body" data-controller="hello" data-hello-count-value="0">
